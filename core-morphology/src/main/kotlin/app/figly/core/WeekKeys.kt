@@ -44,13 +44,14 @@ object WeekKeys {
     fun dateRangeLabel(isoWeekKey: String): String {
         val mon = mondayOf(isoWeekKey)
         val sun = mon.plusDays(6)
-        val dd = DateTimeFormatter.ofPattern("dd", Locale.ROOT)
-        val mmm = DateTimeFormatter.ofPattern("MMM yyyy", Locale.ROOT)
+        // Locale.ENGLISH, not ROOT: ROOT has no month names and prints "M05".
+        val dd = DateTimeFormatter.ofPattern("dd", Locale.ENGLISH)
+        val mmm = DateTimeFormatter.ofPattern("MMM yyyy", Locale.ENGLISH)
         return if (mon.month == sun.month) {
-            "${mon.format(dd)}–${sun.format(dd)} ${sun.format(mmm).uppercase(Locale.ROOT)}"
+            "${mon.format(dd)}–${sun.format(dd)} ${sun.format(mmm).uppercase(Locale.ENGLISH)}"
         } else {
-            val dmmm = DateTimeFormatter.ofPattern("dd MMM", Locale.ROOT)
-            "${mon.format(dmmm).uppercase(Locale.ROOT)} – ${sun.format(dmmm).uppercase(Locale.ROOT)} ${sun.format(DateTimeFormatter.ofPattern("yyyy"))}"
+            val dmmm = DateTimeFormatter.ofPattern("dd MMM", Locale.ENGLISH)
+            "${mon.format(dmmm).uppercase(Locale.ENGLISH)} – ${sun.format(dmmm).uppercase(Locale.ENGLISH)} ${sun.format(DateTimeFormatter.ofPattern("yyyy"))}"
         }
     }
 

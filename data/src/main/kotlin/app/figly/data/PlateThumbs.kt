@@ -16,8 +16,11 @@ import java.io.File
  */
 object PlateThumbs {
 
-    private const val WIDTH = 456 // 760 × 0.6
-    private const val HEIGHT = 624 // 1040 × 0.6 — same plate, smaller press
+    // The thumbnail is the dot field alone, cropped tight — the label-free
+    // index. 760 × 576 plate units at 0.6.
+    private const val WIDTH = 456
+    private const val HEIGHT = 346
+    private const val FIELD_TOP = 72.0 // GRID_Y − half a pitch
 
     private fun dir(context: Context) = File(context.filesDir, "thumbs").apply { mkdirs() }
 
@@ -39,10 +42,8 @@ object PlateThumbs {
                 else -> Color.parseColor("#E7E2D5")
             }
             paint.alpha = (d.alpha * 255).toInt()
-            // The dot field occupies the upper plate; recenter it slightly
-            // for the label-less crop.
             val x = (d.x * scale).toFloat()
-            val y = ((d.y + 28.0) * scale).toFloat()
+            val y = ((d.y - FIELD_TOP) * scale).toFloat()
             canvas.drawCircle(x, y, (d.r * scale).toFloat(), paint)
         }
 

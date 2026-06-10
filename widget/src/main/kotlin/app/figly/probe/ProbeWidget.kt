@@ -218,7 +218,7 @@ private fun DotsRow(
     action: (Int) -> androidx.glance.action.Action,
 ) {
     Row(GlanceModifier.fillMaxWidth().height(20.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(Probe.tracked(name), style = micro(label, 9), modifier = GlanceModifier.width(56.dp))
+        Text(Probe.tracked(name), style = micro(label, 9), maxLines = 1, modifier = GlanceModifier.width(76.dp))
         Spacer(GlanceModifier.defaultWeight())
         for (v in 1..5) {
             val filled = selected != null && v <= selected
@@ -235,7 +235,7 @@ private fun DotsRow(
 @Composable
 private fun CollapsedRow(name: String, mark: String, label: ColorProvider) {
     Row(GlanceModifier.fillMaxWidth().height(14.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(Probe.tracked(name), style = micro(INK_FAINT, 9), modifier = GlanceModifier.width(56.dp))
+        Text(Probe.tracked(name), style = micro(INK_FAINT, 9), maxLines = 1, modifier = GlanceModifier.width(76.dp))
         Spacer(GlanceModifier.defaultWeight())
         Text(mark, style = micro(label, 9))
     }
@@ -248,7 +248,7 @@ private fun SleepRow(s: ProbeState, label: ColorProvider, value: ColorProvider) 
         return
     }
     Row(GlanceModifier.fillMaxWidth().height(20.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(Probe.tracked("SLEPT"), style = micro(label, 9), modifier = GlanceModifier.width(56.dp))
+        Text(Probe.tracked("SLEPT"), style = micro(label, 9), maxLines = 1, modifier = GlanceModifier.width(76.dp))
         Spacer(GlanceModifier.defaultWeight())
         val sheet = actionStartActivity(
             Intent(SLEEP_SHEET_ACTION).setPackage(LocalContext.current.packageName)
@@ -280,7 +280,7 @@ private fun SleepRow(s: ProbeState, label: ColorProvider, value: ColorProvider) 
 @Composable
 private fun ScreenRow(s: ProbeState, label: ColorProvider, value: ColorProvider) {
     Row(GlanceModifier.fillMaxWidth().height(16.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(Probe.tracked("SCREEN"), style = micro(label, 9), modifier = GlanceModifier.width(56.dp))
+        Text(Probe.tracked("SCREEN"), style = micro(label, 9), maxLines = 1, modifier = GlanceModifier.width(76.dp))
         Spacer(GlanceModifier.defaultWeight())
         val text = when (s.underBudget) {
             true -> "UNDER ✓" + if (s.budgetIsAuto) " · AUTO" else ""

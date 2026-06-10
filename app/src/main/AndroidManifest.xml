@@ -1,13 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- figly keeps everything on this phone. there is no account, no
          cloud, no network — verifiable: this manifest never asks for
-         INTERNET. -->
+         INTERNET, and library permissions that imply a network are
+         stripped below. -->
 
     <!-- Optional: the coarse city on a plate's COLLECTED line. Never
          requested at runtime except from settings, by hand. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- WorkManager (pulled in by Glance) declares these; figly has no
+         network-constrained or boot-persisted work. Stripped. -->
+    <uses-permission
+        android:name="android.permission.ACCESS_NETWORK_STATE"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.RECEIVE_BOOT_COMPLETED"
+        tools:node="remove" />
 
     <application
         android:name="app.figly.FiglyApp"

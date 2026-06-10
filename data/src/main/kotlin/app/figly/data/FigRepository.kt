@@ -251,21 +251,32 @@ class FigRepository private constructor(private val context: Context) {
         val slots = rows.map { row ->
             if (row.missed) DaySlot.Missed else DaySlot.Sealed(row.toReading())
         }
-        val seed = seedFor(key)
+        return pressWeek(key, slots, resolveCity(), ceremonyPending = true, at = now)
+    }
+
+    /** Freeze a week from resolved slots. The press, as a single verb. */
+    suspend fun pressWeek(
+        isoWeek: String,
+        slots: List<DaySlot>,
+        collected: String?,
+        ceremonyPending: Boolean = true,
+        at: ZonedDateTime = ZonedDateTime.now(),
+    ): WeekEntity {
+        val seed = seedFor(isoWeek)
         val fig = Grow.grow(seed, slots)
         val entity = WeekEntity(
-            isoWeek = key,
+            isoWeek = isoWeek,
             seed = seed.toLong(),
-            pressedAt = now.toInstant().toEpochMilli(),
-            ceremonyPlayedAt = null,
+            pressedAt = at.toInstant().toEpochMilli(),
+            ceremonyPlayedAt = if (ceremonyPending) null else at.toInstant().toEpochMilli(),
             seasonName = fig.stats.season.name,
             seasonTint = fig.stats.season.hex,
             statsJson = fig.stats.toJson(),
             cellsJson = fig.cellsToJson(),
-            collected = resolveCity(),
+            collected = collected,
         )
         db.weeks().insert(entity)
-        PlateThumbs.write(context, key, fig, seed)
+        PlateThumbs.write(context, isoWeek, fig, seed)
         return entity
     }
 
@@ -280,6 +291,9 @@ class FigRepository private constructor(private val context: Context) {
     suspend fun pressedWeek(isoWeek: String): WeekEntity? = db.weeks().byKey(isoWeek)
 
     suspend fun dayRows(isoWeek: String): List<DayReadingEntity> = db.days().byWeek(isoWeek)
+
+    fun observeDayRows(isoWeek: String): kotlinx.coroutines.flow.Flow<List<DayReadingEntity>> =
+        db.days().observeWeek(isoWeek)
 
     suspend fun markCeremonyPlayed(isoWeek: String) =
         db.weeks().markCeremonyPlayed(isoWeek, System.currentTimeMillis())

@@ -52,6 +52,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        DemoSeed.plantIfAsked(this, intent)
         setContent {
             CompositionLocalProvider(LocalIndication provides QuietIndication) {
                 Herbarium()

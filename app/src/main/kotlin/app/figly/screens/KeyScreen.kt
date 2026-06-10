@@ -143,13 +143,15 @@ private fun KeyDiagram() {
         Triple(4, 3, CellType.DRUPE),
         Triple(3, 2, CellType.SCAR),
     )
+    // Ordered top-to-bottom by anchor cell, so no callout ever crosses
+    // another — the key must be the calmest drawing in the product.
     val rows = listOf(
-        KeyRow(3, 6, "INTERNODE — DAY RATING", "MORE SEGMENTS, BETTER DAY (1–5)"),
-        KeyRow(4, 6, "LEAF — SLEEP", "PAIR ≥ 7H · ONE 5–7H · BARE BELOW"),
-        KeyRow(4, 4, "BEND — BEDTIME", "EARLY NIGHTS CLIMB · LATE NIGHTS DROOP"),
-        KeyRow(5, 5, "THORN — EFFORT", "GROWN AT 4 AND ABOVE (1–5)"),
-        KeyRow(4, 3, "DRUPE — SCREEN", "UNDER BUDGET BEARS THE FRUIT"),
         KeyRow(3, 2, "SCAR — MISSED DAY", "HONEST GAPS, STRAIGHT UP"),
+        KeyRow(4, 3, "DRUPE — SCREEN", "UNDER BUDGET BEARS THE FRUIT"),
+        KeyRow(4, 4, "BEND — BEDTIME", "EARLY CLIMBS · LATE DROOPS"),
+        KeyRow(5, 5, "THORN — EFFORT", "GROWN AT 4 AND ABOVE"),
+        KeyRow(4, 6, "LEAF — SLEEP", "PAIR ≥ 7H · ONE 5–7H · BARE BELOW"),
+        KeyRow(3, 7, "INTERNODE — DAY RATING", "MORE SEGMENTS, BETTER DAY"),
     )
 
     val density = LocalDensity.current

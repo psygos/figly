@@ -32,6 +32,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -144,7 +146,7 @@ fun PlateScreen(isoWeek: String, back: () -> Unit, openKey: () -> Unit) {
 
         Spacer(Modifier.height(Ink.s3))
 
-        // The plate itself.
+        // The plate itself — corner ticks frame the whole sheet.
         Column(
             Modifier
                 .fillMaxWidth()
@@ -152,17 +154,16 @@ fun PlateScreen(isoWeek: String, back: () -> Unit, openKey: () -> Unit) {
                 .background(Ink.ground)
                 .border(1.dp, Ink.hairline)
                 .background(Ink.plate)
+                .drawCornerTicks(Ink.inkDim)
                 .padding(Ink.s6),
         ) {
-            CornerTicks {
-                PlateDots(
-                    fig = fig,
-                    seed = week.seed.toUInt(),
-                    season = app.figly.core.Season.valueOf(week.seasonName),
-                    modifier = Modifier.fillMaxWidth().aspectRatio(plateDotsAspect()),
-                    onCellTap = { annotation = it },
-                )
-            }
+            PlateDots(
+                fig = fig,
+                seed = week.seed.toUInt(),
+                season = app.figly.core.Season.valueOf(week.seasonName),
+                modifier = Modifier.fillMaxWidth().aspectRatio(plateDotsAspect()),
+                onCellTap = { annotation = it },
+            )
 
             Spacer(Modifier.height(Ink.s8))
 
@@ -234,25 +235,19 @@ private fun annotate(cell: FigCell, days: List<DayReadingEntity>): String {
     ).joinToString(" · ") + if (marks.isEmpty()) "" else " · $marks"
 }
 
-@Composable
-private fun CornerTicks(content: @Composable () -> Unit) {
-    Box(Modifier.fillMaxWidth()) {
-        content()
-        val tick = Ink.inkDim
-        androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().aspectRatio(plateDotsAspect())) {
-            val a = 12f * (size.width / 760f)
-            val w = size.width
-            val h = size.height
-            val stroke = 1f
-            // ⌐ ¬ corners, hairline.
-            drawLine(tick, androidx.compose.ui.geometry.Offset(0f, a), androidx.compose.ui.geometry.Offset(0f, 0f), stroke)
-            drawLine(tick, androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Offset(a, 0f), stroke)
-            drawLine(tick, androidx.compose.ui.geometry.Offset(w - a, 0f), androidx.compose.ui.geometry.Offset(w, 0f), stroke)
-            drawLine(tick, androidx.compose.ui.geometry.Offset(w, 0f), androidx.compose.ui.geometry.Offset(w, a), stroke)
-            drawLine(tick, androidx.compose.ui.geometry.Offset(0f, h - a), androidx.compose.ui.geometry.Offset(0f, h), stroke)
-            drawLine(tick, androidx.compose.ui.geometry.Offset(0f, h), androidx.compose.ui.geometry.Offset(a, h), stroke)
-            drawLine(tick, androidx.compose.ui.geometry.Offset(w - a, h), androidx.compose.ui.geometry.Offset(w, h), stroke)
-            drawLine(tick, androidx.compose.ui.geometry.Offset(w, h - a), androidx.compose.ui.geometry.Offset(w, h), stroke)
-        }
+/** Hairline corner ticks inset like the reference plate's. */
+private fun Modifier.drawCornerTicks(color: androidx.compose.ui.graphics.Color): Modifier =
+    drawBehind {
+        val inset = 24f * (size.width / 760f)
+        val arm = 12f * (size.width / 760f)
+        val l = inset
+        val t = inset
+        val r = size.width - inset
+        val b = size.height - inset
+        fun seg(x1: Float, y1: Float, x2: Float, y2: Float) =
+            drawLine(color, Offset(x1, y1), Offset(x2, y2), 1f)
+        seg(l, t + arm, l, t); seg(l, t, l + arm, t)
+        seg(r - arm, t, r, t); seg(r, t, r, t + arm)
+        seg(l, b - arm, l, b); seg(l, b, l + arm, b)
+        seg(r - arm, b, r, b); seg(r, b, r, b - arm)
     }
-}

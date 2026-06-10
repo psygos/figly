@@ -70,16 +70,19 @@ fun HomeScreen(
         val today = LocalDate.now()
         val weekKey = WeekKeys.isoWeekKey(today)
         val seed = repo.seedFor(weekKey)
-        val fig = repo.liveFig()
-        val todaySealed = repo.todayRow() != null
-        val slots = repo.daySlots(weekKey, today)
-        val dayMarks = withContext(Dispatchers.Default) {
-            (1..7).map { d ->
-                if (d <= slots.size) Stamp.sealedStamp(seed, slots.take(d)) else null
+        // Stay alive to seals from the widget and to every press.
+        kotlinx.coroutines.flow.combine(
+            repo.observePressedWeeks(),
+            repo.observeDayRows(weekKey),
+        ) { weeks, _ -> weeks }.collect { weeks ->
+            val fig = repo.liveFig()
+            val todaySealed = repo.todayRow() != null
+            val slots = repo.daySlots(weekKey, today)
+            val dayMarks = withContext(Dispatchers.Default) {
+                (1..7).map { d ->
+                    if (d <= slots.size) Stamp.sealedStamp(seed, slots.take(d)) else null
+                }
             }
-        }
-        // The drawer stays alive: every press repaints it.
-        repo.observePressedWeeks().collect { weeks ->
             value = HomeState(
                 weekKey = weekKey,
                 seed = seed,
@@ -261,7 +264,7 @@ private fun DrawerThumb(week: WeekEntity, onTap: () -> Unit) {
     Box(
         Modifier
             .fillMaxWidth()
-            .aspectRatio(456f / 624f)
+            .aspectRatio(456f / 346f)
             .background(Ink.plate)
             .clickable(onClick = onTap)
             .semantics { contentDescription = describeWeek(week) },

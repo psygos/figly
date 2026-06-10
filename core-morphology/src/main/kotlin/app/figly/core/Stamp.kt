@@ -31,6 +31,10 @@ object Stamp {
         effort: Int?,
         underBudget: Boolean?,
     ): List<Dot> {
+        // Nothing answered yet: bare paper, not a guess.
+        if (mood == null && bedMin == null && durMin == null &&
+            effort == null && underBudget == null
+        ) return emptyList()
         val reading = DayReading(
             mood = mood ?: 1,
             bedMinutesAfterNoon = bedMin ?: 630,
