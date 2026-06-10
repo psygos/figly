@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -25,4 +26,5 @@ dependencies {
     implementation(project(":data"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.glance.appwidget)
+    implementation(libs.kotlinx.coroutines.android)
 }

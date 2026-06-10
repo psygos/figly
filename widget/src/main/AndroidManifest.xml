@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Optional, special-grant: screen budget + sleep suggestion.
+         Everything degrades gracefully to manual without it. -->
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions"
+        xmlns:tools="http://schemas.android.com/tools" />
+    <!-- Only fires if the user turns the 21:30 reminder on. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application>
+        <!-- PROBE — the home-screen widget. -->
+        <receiver
+            android:name="app.figly.probe.ProbeWidgetReceiver"
+            android:exported="true"
+            android:label="probe">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/probe_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name="app.figly.probe.ReminderReceiver"
+            android:exported="false" />
+    </application>
+</manifest>
