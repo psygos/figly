@@ -24,6 +24,7 @@ dependencies {
     implementation(project(":core-morphology"))
     implementation(project(":data"))
     implementation(libs.androidx.core.ktx)
+    implementation(libs.kotlinx.coroutines.android)
     // The Glyph Matrix SDK is packaged once, by :app. Compile-only here so the
     // library AAR doesn't try to embed a local AAR (unsupported by AGP).
     compileOnly(rootProject.files("libs/glyph-matrix-sdk-2.0.aar"))

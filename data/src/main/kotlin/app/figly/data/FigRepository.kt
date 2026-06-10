@@ -269,6 +269,12 @@ class FigRepository private constructor(private val context: Context) {
         return entity
     }
 
+    /** A pressed week whose Loom ceremony hasn't been witnessed yet. */
+    suspend fun pendingCeremony(): WeekEntity? = db.weeks().pendingCeremony()
+
+    suspend fun markCeremonyPlayed(isoWeek: String) =
+        db.weeks().markCeremonyPlayed(isoWeek, System.currentTimeMillis())
+
     fun figOf(week: WeekEntity): Fig {
         val cells = cellsFromJson(week.cellsJson)
         val stats = statsFromJson(week.statsJson)

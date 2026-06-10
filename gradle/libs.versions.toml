@@ -9,6 +9,7 @@ lifecycleRuntimeCompose = "2.8.7"
 glance = "1.1.1"
 room = "2.6.1"
 serializationJson = "1.7.3"
+coroutines = "1.8.1"
 junit = "4.13.2"
 
 [libraries]
@@ -25,6 +26,7 @@ room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serializationJson" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 
 [plugins]
