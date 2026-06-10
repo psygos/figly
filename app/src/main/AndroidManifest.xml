@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- figly keeps everything on this phone. there is no account, no
+         cloud, no network — verifiable: this manifest never asks for
+         INTERNET. -->
+
+    <!-- Optional: the coarse city on a plate's COLLECTED line. Never
+         requested at runtime except from settings, by hand. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <application
+        android:name="app.figly.FiglyApp"
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:theme="@style/Theme.Figly"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules">
+
+        <activity
+            android:name="app.figly.MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Probe's slim sheet: sleep steppers; grace fills. Launched only
+             by our own widget's PendingIntents. -->
+        <activity
+            android:name="app.figly.SleepSheetActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Figly.Sheet"
+            android:excludeFromRecents="true">
+            <intent-filter>
+                <action android:name="app.figly.SLEEP_SHEET" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

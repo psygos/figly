@@ -272,6 +272,15 @@ class FigRepository private constructor(private val context: Context) {
     /** A pressed week whose Loom ceremony hasn't been witnessed yet. */
     suspend fun pendingCeremony(): WeekEntity? = db.weeks().pendingCeremony()
 
+    suspend fun pressedWeeks(): List<WeekEntity> = db.weeks().all()
+
+    fun observePressedWeeks(): kotlinx.coroutines.flow.Flow<List<WeekEntity>> =
+        db.weeks().observeAll()
+
+    suspend fun pressedWeek(isoWeek: String): WeekEntity? = db.weeks().byKey(isoWeek)
+
+    suspend fun dayRows(isoWeek: String): List<DayReadingEntity> = db.days().byWeek(isoWeek)
+
     suspend fun markCeremonyPlayed(isoWeek: String) =
         db.weeks().markCeremonyPlayed(isoWeek, System.currentTimeMillis())
 
