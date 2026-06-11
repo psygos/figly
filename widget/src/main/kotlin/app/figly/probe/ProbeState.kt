@@ -30,7 +30,6 @@ data class ProbeState(
     val budgetIsAuto: Boolean,
     val budgetNeedsHand: Boolean, // no permission, no override
     val sealable: Boolean,
-    val stamp: List<Stamp.Dot>,
     val figId: String,            // for PRESSING
     val sealedStamp: List<Stamp.Dot>,
 ) {
@@ -80,18 +79,7 @@ object Probe {
         }
 
         val slots = repo.daySlots(weekKey, today)
-        val daysBeforeToday = slots.take(WeekKeys.dayIndex(today) - 1)
         val seed = repo.seedFor(weekKey)
-
-        val stamp = Stamp.preview(
-            seed = seed,
-            daysSoFar = daysBeforeToday,
-            mood = draft.mood,
-            bedMin = bed,
-            durMin = dur,
-            effort = draft.effort,
-            underBudget = resolved,
-        )
 
         val kind = when {
             today.dayOfWeek == DayOfWeek.SUNDAY && sealedToday -> ProbeState.Kind.PRESSING
@@ -118,7 +106,6 @@ object Probe {
             budgetIsAuto = budgetIsAuto,
             budgetNeedsHand = resolved == null,
             sealable = sealable,
-            stamp = stamp,
             figId = WeekKeys.figId(weekKey),
             sealedStamp = if (sealedToday) {
                 Stamp.sealedStamp(seed, slots.take(WeekKeys.dayIndex(today)))
