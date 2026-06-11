@@ -153,6 +153,7 @@ private fun KeyDiagram() {
         Triple(4, 5, CellType.WOOD),
         Triple(4, 4, CellType.WOOD),
         Triple(5, 5, CellType.THORN),
+        Triple(5, 3, CellType.THORN),
         Triple(4, 3, CellType.DRUPE),
         Triple(3, 2, CellType.SCAR),
     )
@@ -162,7 +163,7 @@ private fun KeyDiagram() {
         KeyRow(3, 2, "SCAR — MISSED DAY", "HONEST GAPS, STRAIGHT UP"),
         KeyRow(4, 3, "DRUPE — SCREEN", "UNDER BUDGET BEARS THE FRUIT"),
         KeyRow(4, 4, "BEND — BEDTIME", "EARLY CLIMBS · LATE DROOPS"),
-        KeyRow(5, 5, "THORN — EFFORT", "GROWN AT 4 AND ABOVE"),
+        KeyRow(5, 5, "THORN — EFFORT", "BODY POINTS DOWN · MIND UP · AT 4+"),
         KeyRow(4, 6, "LEAF — SLEEP", "PAIR ≥ 7H · ONE 5–7H · BARE BELOW"),
         KeyRow(3, 7, "INTERNODE — DAY RATING", "MORE SEGMENTS, BETTER DAY"),
     )

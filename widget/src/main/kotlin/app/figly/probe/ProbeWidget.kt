@@ -125,7 +125,7 @@ private fun fit(hasGrace: Boolean): Fit {
     val sealH = if (h < 150f) 20f else 26f
 
     // Units of height: scales 1.0 each, senses 0.7, header 0.8, grace 0.7.
-    var units = 2f * 1.0f + 2f * 0.7f
+    var units = 3f * 1.0f + 2f * 0.7f
     if (showHeader) units += 0.8f
     if (hasGrace) units += 0.7f
     val rules = 2 + (if (showHeader) 1 else 0) + (if (hasGrace) 1 else 0)
@@ -248,12 +248,15 @@ private fun AskingFace(s: ProbeState, f: Fit) {
         }
         if (s.grace != null) GraceRow(s, f)
 
-        // The two hand-scales: always visible, filled to the answer.
+        // The three hand-scales: always visible, filled to the answer.
         ScaleRow("MOOD", s.mood, f) { v ->
             actionRunCallback<SetMoodAction>(actionParametersOf(PARAM_VALUE to v))
         }
-        ScaleRow(s.effortLabel, s.effort, f) { v ->
-            actionRunCallback<SetEffortAction>(actionParametersOf(PARAM_VALUE to v))
+        ScaleRow("BODY", s.body, f) { v ->
+            actionRunCallback<SetBodyAction>(actionParametersOf(PARAM_VALUE to v))
+        }
+        ScaleRow("MIND", s.mind, f) { v ->
+            actionRunCallback<SetMindAction>(actionParametersOf(PARAM_VALUE to v))
         }
 
         Rule()
@@ -447,8 +450,9 @@ private fun SealRow(s: ProbeState, f: Fit) {
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                Probe.tracked("READINGS OPEN · ${s.answered} OF 5"),
+                "READINGS · ${s.answered} OF 6",
                 style = mono(INK_FAINT, f.labelSp),
+                maxLines = 1,
             )
         }
     }

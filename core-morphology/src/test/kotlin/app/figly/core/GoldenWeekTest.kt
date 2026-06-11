@@ -15,11 +15,11 @@ class GoldenWeekTest {
         Grow.grow(weekSeed(key, GoldenWeeks.SALT), days)
 
     @Test
-    fun `auric week — tall, lush, every channel present`() {
+    fun `auric week — tall, lush, every channel present, both efforts`() {
         val fig = grown("2026-W21", GoldenWeeks.AURIC)
         assertEquals(
             FigStats(
-                cells = 41, wood = 23, leaves = 11, thorns = 2, drupes = 5,
+                cells = 42, wood = 21, leaves = 12, thorns = 4, drupes = 5,
                 scars = 0, heightRow = 0, meanMood = 5.0, season = Season.AURIC,
             ),
             fig.stats,
@@ -29,17 +29,17 @@ class GoldenWeekTest {
         assertTrue("vigorous weeks read vigorous", fig.stats.wood >= 20)
         assertEquals(
             """
-            |        W W W W D
-            |    · · · · l · W l D
-            |  · · · · · · · W · t W
-            |  · · · · · · l · W W W
-            |· · · · · · · · W D · l ·
-            |· · · · · · · l W l l · ·
-            |· · · · · · · · W · · W D
-            |· · · · · · W D · · W · l
-            |· · · · · l W l t W · · ·
-            |  · · · · · W · l W · ·
-            |  · · · · · W W W · · ·
+            |        D W t W W
+            |    · · l W · · W W D
+            |  · · · l W l · l · W t
+            |  · · · · W · · t l W l
+            |· · · · D W · · W D W · ·
+            |· · · · l W l l W l · · ·
+            |· · · · · W · · W · · · ·
+            |· · · · · · W D · · · · ·
+            |· · · · · l W l t · · · ·
+            |  · · · · · W · · · · ·
+            |  · · · · · W · · · · ·
             |    · ~ ~ ~ ~ ~ ~ ~ ·
             |        · · · · ·
             |""".trimMargin(),
@@ -85,21 +85,21 @@ class GoldenWeekTest {
         val fig = grown("2026-W23", GoldenWeeks.MIXED)
         assertEquals(
             FigStats(
-                cells = 21, wood = 10, leaves = 5, thorns = 2, drupes = 3,
+                cells = 23, wood = 10, leaves = 6, thorns = 3, drupes = 3,
                 scars = 1, heightRow = 0, meanMood = 3.0, season = Season.TEMPERATE,
             ),
             fig.stats,
         )
         assertEquals(
             """
-            |        · · D W W
-            |    · · · · · · t D W
-            |  · · · · · · · · · W ·
-            |  · · · · · · · · x · ·
-            |· · · · · · · · l W · · ·
-            |· · · · · · · l t W · · ·
-            |· · · · · · · · W · · · ·
-            |· · · · · · · W · l · · ·
+            |        · · · D W
+            |    · · · · · l · W D
+            |  · · · · · · · · t W W
+            |  · · · · · · · · · x ·
+            |· · · · · · · · · · W · ·
+            |· · · · · · · · l W · l ·
+            |· · · · · · · · t W · · ·
+            |· · · · · · t · W · l · ·
             |· · · · · · l D · · · · ·
             |  · · · · · · W · · · ·
             |  · · · · · W · l · · ·

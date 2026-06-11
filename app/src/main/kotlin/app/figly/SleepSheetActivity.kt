@@ -84,7 +84,8 @@ private fun Sheet(grace: Boolean, date: LocalDate, close: () -> Unit) {
         mutableIntStateOf(draft.durMin ?: suggestion?.durationMin ?: 480)
     }
     var mood by remember { mutableStateOf(draft.mood) }
-    var effort by remember { mutableStateOf(draft.effort) }
+    var body by remember { mutableStateOf(draft.body) }
+    var mind by remember { mutableStateOf(draft.mind) }
     var under by remember { mutableStateOf(draft.underBudget) }
 
     Box(
@@ -126,7 +127,8 @@ private fun Sheet(grace: Boolean, date: LocalDate, close: () -> Unit) {
             if (grace) {
                 Spacer(Modifier.height(Ink.s4))
                 DotsRow("MOOD", mood) { mood = it }
-                DotsRow(repo.effortLabel, effort) { effort = it }
+                DotsRow("BODY", body) { body = it }
+                DotsRow("MIND", mind) { mind = it }
                 Row(
                     Modifier.fillMaxWidth().height(28.dp)
                         .clickable { under = !(under ?: false) },
@@ -149,7 +151,7 @@ private fun Sheet(grace: Boolean, date: LocalDate, close: () -> Unit) {
             Box(Modifier.fillMaxWidth().height(1.dp).background(Ink.hairline))
             Spacer(Modifier.height(Ink.s3))
 
-            val complete = !grace || (mood != null && effort != null && under != null)
+            val complete = !grace || (mood != null && body != null && mind != null && under != null)
             Box(
                 Modifier
                     .fillMaxWidth()
@@ -163,7 +165,8 @@ private fun Sheet(grace: Boolean, date: LocalDate, close: () -> Unit) {
                                         mood = mood!!,
                                         bedMinutesAfterNoon = bed,
                                         durationMin = dur,
-                                        effort = effort!!,
+                                        body = body!!,
+                                        mind = mind!!,
                                         underBudget = under!!,
                                     ),
                                 )

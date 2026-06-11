@@ -28,18 +28,20 @@ object Stamp {
         mood: Int?,
         bedMin: Int?,
         durMin: Int?,
-        effort: Int?,
+        body: Int?,
+        mind: Int?,
         underBudget: Boolean?,
     ): List<Dot> {
         // Nothing answered yet: bare paper, not a guess.
         if (mood == null && bedMin == null && durMin == null &&
-            effort == null && underBudget == null
+            body == null && mind == null && underBudget == null
         ) return emptyList()
         val reading = DayReading(
             mood = mood ?: 1,
             bedMinutesAfterNoon = bedMin ?: 630,
             durationMin = durMin ?: 0,
-            effort = effort ?: 1,
+            body = body ?: 1,
+            mind = mind ?: 1,
             underBudget = underBudget ?: false,
         )
         val before = Grow.grow(seed, daysSoFar)

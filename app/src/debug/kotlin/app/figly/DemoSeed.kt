@@ -27,8 +27,8 @@ object DemoSeed {
         val today = LocalDate.now()
         val thisMonday = WeekKeys.monday(today)
 
-        fun day(mood: Int, bed: Int, dur: Int, effort: Int, under: Boolean) =
-            DaySlot.Sealed(DayReading(mood, bed, dur, effort, under))
+        fun day(mood: Int, bed: Int, dur: Int, body: Int, under: Boolean) =
+            DaySlot.Sealed(DayReading(mood, bed, dur, body, ((body + 1) % 5) + 1, under))
 
         val pasts: List<Pair<Int, List<DaySlot>>> = listOf(
             4 to listOf( // a verdant week
@@ -79,7 +79,8 @@ object DemoSeed {
                     mood = mood,
                     bedMinutesAfterNoon = 660 + (offset * 30).toInt(),
                     durationMin = 430 + (offset * 20).toInt(),
-                    effort = if (offset == 1L) 4 else 2,
+                    body = if (offset == 1L) 4 else 2,
+                    mind = if (offset == 2L) 5 else 3,
                     underBudget = under,
                 ),
             )

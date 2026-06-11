@@ -77,7 +77,8 @@ class FigRepository private constructor(private val context: Context) {
         mood = prefs.getInt("draft:$date:mood", 0).takeIf { it in 1..5 },
         bedMin = prefs.getInt("draft:$date:bed", -1).takeIf { it >= 0 },
         durMin = prefs.getInt("draft:$date:dur", -1).takeIf { it >= 0 },
-        effort = prefs.getInt("draft:$date:effort", 0).takeIf { it in 1..5 },
+        body = prefs.getInt("draft:$date:effort", 0).takeIf { it in 1..5 },
+        mind = prefs.getInt("draft:$date:mind", 0).takeIf { it in 1..5 },
         underBudget = when (prefs.getInt("draft:$date:budget", -1)) {
             1 -> true; 0 -> false; else -> null
         },
@@ -90,14 +91,15 @@ class FigRepository private constructor(private val context: Context) {
             putInt("draft:$date:mood", d.mood ?: 0)
             putInt("draft:$date:bed", d.bedMin ?: -1)
             putInt("draft:$date:dur", d.durMin ?: -1)
-            putInt("draft:$date:effort", d.effort ?: 0)
+            putInt("draft:$date:effort", d.body ?: 0)
+            putInt("draft:$date:mind", d.mind ?: 0)
             putInt("draft:$date:budget", when (d.underBudget) { true -> 1; false -> 0; null -> -1 })
             putBoolean("draft:$date:sleepok", d.sleepConfirmed)
         }
     }
 
     private fun clearDraft(date: LocalDate) = prefs.edit {
-        listOf("mood", "bed", "dur", "effort", "budget", "sleepok").forEach {
+        listOf("mood", "bed", "dur", "effort", "mind", "budget", "sleepok").forEach {
             remove("draft:$date:$it")
         }
     }
@@ -106,16 +108,18 @@ class FigRepository private constructor(private val context: Context) {
         val mood: Int?,
         val bedMin: Int?,
         val durMin: Int?,
-        val effort: Int?,
+        val body: Int?,
+        val mind: Int?,
         val underBudget: Boolean?,
         val sleepConfirmed: Boolean,
     ) {
         val complete: Boolean
             get() = mood != null && bedMin != null && durMin != null &&
-                effort != null && underBudget != null && sleepConfirmed
+                body != null && mind != null && underBudget != null && sleepConfirmed
+        /** Of the six readings — bed and duration confirm together as two. */
         val answeredCount: Int
-            get() = listOf(mood != null, sleepConfirmed, effort != null, underBudget != null)
-                .count { it }
+            get() = listOf(mood != null, body != null, mind != null, underBudget != null)
+                .count { it } + if (sleepConfirmed) 2 else 0
     }
 
     // ── The week, resolved ─────────────────────────────────────────────
@@ -166,7 +170,8 @@ class FigRepository private constructor(private val context: Context) {
                 mood = reading.mood,
                 bedMinutesAfterNoon = reading.bedMinutesAfterNoon,
                 durationMin = reading.durationMin,
-                effort = reading.effort,
+                effort = reading.body,
+                mentalEffort = reading.mind,
                 underBudget = reading.underBudget,
                 sealedAt = now.toInstant().toEpochMilli(),
                 zoneOffsetMin = now.offset.totalSeconds / 60,
@@ -222,6 +227,7 @@ class FigRepository private constructor(private val context: Context) {
         dayIndex = WeekKeys.dayIndex(date),
         missed = true,
         mood = 0, bedMinutesAfterNoon = 0, durationMin = 0, effort = 0,
+        mentalEffort = 0,
         underBudget = false,
         sealedAt = now.toInstant().toEpochMilli(),
         zoneOffsetMin = now.offset.totalSeconds / 60,
@@ -359,7 +365,10 @@ class FigRepository private constructor(private val context: Context) {
         mood = mood,
         bedMinutesAfterNoon = bedMinutesAfterNoon,
         durationMin = durationMin,
-        effort = effort,
+        body = effort,
+        // Rows sealed before the split carry 0: unrecorded reads as 1 —
+        // no thorn invented after the fact.
+        mind = mentalEffort.coerceIn(1, 5).takeIf { mentalEffort != 0 } ?: 1,
         underBudget = underBudget,
     )
 

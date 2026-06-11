@@ -47,7 +47,10 @@ data class DayReadingEntity(
     val mood: Int,
     val bedMinutesAfterNoon: Int,
     val durationMin: Int,
+    /** Physical effort. Column kept under its old name, `effort`. */
     val effort: Int,
+    /** Mental effort; 0 on rows sealed before the split — unrecorded. */
+    val mentalEffort: Int,
     val underBudget: Boolean,
     val sealedAt: Long,
     val zoneOffsetMin: Int,
@@ -103,7 +106,7 @@ interface DayDao {
 
 @Database(
     entities = [WeekEntity::class, DayReadingEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class FiglyDb : RoomDatabase() {
@@ -111,6 +114,15 @@ abstract class FiglyDb : RoomDatabase() {
     abstract fun days(): DayDao
 
     companion object {
+        /** The body/mind split. Old rows carry mind = 0: unrecorded, honest. */
+        private val MIGRATION_1_2 = object : androidx.room.migration.Migration(1, 2) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE day_readings ADD COLUMN mentalEffort INTEGER NOT NULL DEFAULT 0",
+                )
+            }
+        }
+
         @Volatile private var instance: FiglyDb? = null
 
         fun get(context: Context): FiglyDb =
@@ -119,7 +131,8 @@ abstract class FiglyDb : RoomDatabase() {
                     context.applicationContext,
                     FiglyDb::class.java,
                     "figly.db",
-                ).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2)
+                    .build().also { instance = it }
             }
     }
 }

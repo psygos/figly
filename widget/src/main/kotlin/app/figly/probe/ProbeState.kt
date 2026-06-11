@@ -24,8 +24,8 @@ data class ProbeState(
     val durMin: Int?,
     val sleepConfirmed: Boolean,
     val sleepIsSuggestion: Boolean,
-    val effort: Int?,             // 1..5
-    val effortLabel: String,
+    val body: Int?,               // 1..5
+    val mind: Int?,               // 1..5
     val underBudget: Boolean?,    // resolved (draft override or auto)
     val budgetIsAuto: Boolean,
     val budgetNeedsHand: Boolean, // no permission, no override
@@ -38,10 +38,10 @@ data class ProbeState(
 ) {
     enum class Kind { EARLY, ASKING, SEALED, PRESSING }
 
-    /** Of the five readings — bed time and duration confirm together as two. */
+    /** Of the six readings — bed time and duration confirm together as two. */
     val answered: Int
-        get() = listOf(mood != null, effort != null, underBudget != null).count { it } +
-            if (sleepConfirmed) 2 else 0
+        get() = listOf(mood != null, body != null, mind != null, underBudget != null)
+            .count { it } + if (sleepConfirmed) 2 else 0
 }
 
 object Probe {
@@ -92,7 +92,7 @@ object Probe {
         }
 
         val sealable = draft.mood != null && draft.sleepConfirmed &&
-            draft.effort != null && resolved != null
+            draft.body != null && draft.mind != null && resolved != null
 
         return ProbeState(
             kind = kind,
@@ -103,8 +103,8 @@ object Probe {
             durMin = dur,
             sleepConfirmed = draft.sleepConfirmed,
             sleepIsSuggestion = suggestion,
-            effort = draft.effort,
-            effortLabel = repo.effortLabel,
+            body = draft.body,
+            mind = draft.mind,
             underBudget = resolved,
             budgetIsAuto = budgetIsAuto,
             budgetNeedsHand = resolved == null,

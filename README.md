@@ -2,7 +2,7 @@
 
 One fig per week — a small alien plant, rendered on the rear Glyph Matrix
 of a Nothing Phone (4a) Pro, whose shape is a truthful record of how the
-week was lived. Five readings a day are its only weather. At week's end
+week was lived. Six readings a day are its only weather. At week's end
 the fig is pressed into an archive, like a botanist pressing a specimen,
 and a new seed is set.
 
@@ -23,7 +23,7 @@ One APK, three surfaces, one organism:
 | unit | surface | job | material |
 |---|---|---|---|
 | **LOOM** | Glyph Matrix (AOD toy) | *weaves* — grows the living fig | light |
-| **PROBE** | home-screen widget | *asks* — takes the day's five readings | voice |
+| **PROBE** | home-screen widget | *asks* — takes the day's six readings | voice |
 | **HERBARIUM** | the app | *keeps* — archives pressed figs | ink |
 
 Loom glows, Probe asks, Herbarium presses. A pressed fig never glows; the
@@ -36,7 +36,7 @@ light drained into the soil, one ember in the dark, a new seed.
 <p align="center">
   <img src="docs/shots/home.png"  width="32%" alt="Herbarium, This Week: the living fig above the seven day-marks and the drawer of pressed plates" />
   <img src="docs/shots/plate.png" width="32%" alt="A full specimen plate: FIG-2026-W20, 11–17 MAY 2026, AURIC, 33 cells" />
-  <img src="docs/shots/key.png"   width="32%" alt="The Key: a labeled specimen explaining all six channels" />
+  <img src="docs/shots/key.png"   width="32%" alt="The Key: a labeled specimen explaining every channel" />
 </p>
 <p align="center">
   <img src="docs/shots/probe.png" width="64%" alt="Probe on the home screen: mood collapsed to its mark, two wood cells grown on the live stamp, readings open" />
@@ -54,7 +54,8 @@ blended, all scales 1–5:
 mood            → internode length   more segments, better day
 sleep duration  → leaves             pair ≥ 7h · one 5–7h · bare below
 bedtime         → tropism            early nights climb, late nights droop
-physical effort → thorn              grown at 4 and above
+body 1–5        → thorn, downward    physical effort, grown at 4 and above
+mind 1–5        → thorn, skyward     mental effort, grown at 4 and above
 screen budget   → drupe              under budget bears the only near-max light
 a missed day    → scar               one dim cell, straight up. honest gaps.
 ```
@@ -70,21 +71,21 @@ changing the grammar fails a test and is a product decision, not a
 refactor:
 
 ```
-        W W W W D                · · · · ·                  · · D W W
-    · · · · l · W l D        · · · · · · · · ·          · · · · · · t D W
-  · · · · · · · W · t W    · · · · · · · · · · ·      · · · · · · · · · W ·
-  · · · · · · l · W W W    · · · · · · · · · · ·      · · · · · · · · x · ·
-· · · · · · · · W D · l ·  · · · · · · · · · · · · ·  · · · · · · · · l W · · ·
-· · · · · · · l W l l · ·  · · · · · · · · · · W · ·  · · · · · · · l t W · · ·
-· · · · · · · · W · · W D  · · · · · · · · · x · · ·  · · · · · · · · W · · · ·
-· · · · · · W D · · W · l  · · · · · · · · · W · · ·  · · · · · · · W · l · · ·
-· · · · · l W l t W · · ·  · · · · · · · · x W · · ·  · · · · · · l D · · · · ·
-  · · · · · W · l W · ·      · · · · · · W W · · ·      · · · · · · W · · · ·
-  · · · · · W W W · · ·      · · · · · W · · · · ·      · · · · · W · l · · ·
+        D W t W W                  · · · · ·                  · · · D W
+    · · l W · · W W D          · · · · · · · · ·          · · · · · l · W D
+  · · · l W l · l · W t      · · · · · · · · · · ·      · · · · · · · · t W W
+  · · · · W · · t l W l      · · · · · · · · · · ·      · · · · · · · · · x ·
+· · · · D W · · W D W · ·  · · · · · · · · · · · · ·  · · · · · · · · · · W · ·
+· · · · l W l l W l · · ·  · · · · · · · · · · W · ·  · · · · · · · · l W · l ·
+· · · · · W · · W · · · ·  · · · · · · · · · x · · ·  · · · · · · · · t W · · ·
+· · · · · · W D · · · · ·  · · · · · · · · · W · · ·  · · · · · · t · W · l · ·
+· · · · · l W l t · · · ·  · · · · · · · · x W · · ·  · · · · · · l D · · · · ·
+  · · · · · W · · · · ·      · · · · · · W W · · ·      · · · · · · W · · · ·
+  · · · · · W · · · · ·      · · · · · W · · · · ·      · · · · · W · l · · ·
     · ~ ~ ~ ~ ~ ~ ~ ·          · ~ ~ ~ ~ ~ ~ ~ ·          · ~ ~ ~ ~ ~ ~ ~ ·
         · · · · ·                  · · · · ·                  · · · · ·
 
-        AURIC                      ASHFALL                     MIXED
+              AURIC                     ASHFALL                 MIXED
 ```
 
 `figly-reference-plate.svg` (repo root) is the original hand-authored

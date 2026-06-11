@@ -65,23 +65,44 @@ class GrowTest {
     }
 
     @Test
-    fun `a thorn grows at effort 4 and above, never below`() {
+    fun `a body thorn grows at 4 and above, never below`() {
         // Bare day (no leaves) so the thorn channel is observed alone —
         // a leaf pair may legitimately block a short day's thorn.
-        fun day(effort: Int) = DaySlot.Sealed(
-            DayReading(mood = 3, bedMinutesAfterNoon = 660, durationMin = 200, effort = effort, underBudget = false),
+        fun day(body: Int) = DaySlot.Sealed(
+            DayReading(mood = 3, bedMinutesAfterNoon = 660, durationMin = 200, body = body, mind = 1, underBudget = false),
         )
         for (e in 1..5) {
             val fig = Grow.grow(seed, listOf(day(e)))
             val thorns = fig.cellsOfDay(1).count { it.type == CellType.THORN }
-            if (e >= 4) assertEquals("effort $e", 1, thorns) else assertEquals("effort $e", 0, thorns)
+            if (e >= 4) assertEquals("body $e", 1, thorns) else assertEquals("body $e", 0, thorns)
         }
+    }
+
+    @Test
+    fun `a mind thorn grows at 4 and above, and both can stand together`() {
+        fun day(mind: Int) = DaySlot.Sealed(
+            DayReading(mood = 3, bedMinutesAfterNoon = 660, durationMin = 200, body = 1, mind = mind, underBudget = false),
+        )
+        for (e in 1..5) {
+            val fig = Grow.grow(seed, listOf(day(e)))
+            val thorns = fig.cellsOfDay(1).count { it.type == CellType.THORN }
+            if (e >= 4) assertEquals("mind $e", 1, thorns) else assertEquals("mind $e", 0, thorns)
+        }
+        val both = Grow.grow(
+            seed,
+            listOf(
+                DaySlot.Sealed(
+                    DayReading(mood = 3, bedMinutesAfterNoon = 660, durationMin = 200, body = 5, mind = 5, underBudget = false),
+                ),
+            ),
+        )
+        assertEquals(2, both.cellsOfDay(1).count { it.type == CellType.THORN })
     }
 
     @Test
     fun `under budget turns the day's terminal node into the drupe`() {
         val day = DaySlot.Sealed(
-            DayReading(mood = 4, bedMinutesAfterNoon = 660, durationMin = 200, effort = 1, underBudget = true),
+            DayReading(mood = 4, bedMinutesAfterNoon = 660, durationMin = 200, body = 1, mind = 1, underBudget = true),
         )
         val fig = Grow.grow(seed, listOf(day))
         val day1 = fig.cellsOfDay(1)
@@ -93,7 +114,7 @@ class GrowTest {
     @Test
     fun `sleep shapes leaves — pair at 7h, single at 5h, bare below`() {
         fun day(dur: Int) = DaySlot.Sealed(
-            DayReading(mood = 4, bedMinutesAfterNoon = 630, durationMin = dur, effort = 1, underBudget = false),
+            DayReading(mood = 4, bedMinutesAfterNoon = 630, durationMin = dur, body = 1, mind = 1, underBudget = false),
         )
         val pair = Grow.grow(seed, listOf(day(7 * 60))).cellsOfDay(1).count { it.type == CellType.LEAF }
         val single = Grow.grow(seed, listOf(day(6 * 60))).cellsOfDay(1).count { it.type == CellType.LEAF }

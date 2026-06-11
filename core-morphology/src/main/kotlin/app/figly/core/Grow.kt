@@ -165,14 +165,23 @@ object Grow {
                         }
 
                         val last = placedToday.last()
-                        if (growsThorn(r.effort)) {
-                            // One spike off the day's last node, pointing
-                            // down-outward — falling back outward, then down,
-                            // so real exertion is never silently erased.
+                        if (growsThorn(r.body)) {
+                            // The body's spike points down-outward, to the
+                            // earth — falling back outward, then down, so
+                            // real exertion is never silently erased.
                             val thorn = listOf(
                                 Pos(last.row + 1, last.col - side),
                                 Pos(last.row, last.col - side),
                                 Pos(last.row + 1, last.col),
+                            ).firstOrNull { free(it) }
+                            if (thorn != null) place(thorn, CellType.THORN, day)
+                        }
+                        if (growsThorn(r.mind)) {
+                            // The mind's spike points up-outward, to the sky.
+                            val thorn = listOf(
+                                Pos(last.row - 1, last.col - side),
+                                Pos(last.row, last.col - side),
+                                Pos(last.row - 1, last.col),
                             ).firstOrNull { free(it) }
                             if (thorn != null) place(thorn, CellType.THORN, day)
                         }

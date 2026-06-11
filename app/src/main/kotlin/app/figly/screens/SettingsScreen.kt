@@ -53,7 +53,6 @@ fun SettingsScreen(back: () -> Unit) {
     val scope = rememberCoroutineScope()
 
     var budget by remember { mutableIntStateOf(repo.screenBudgetMin) }
-    var effortLabel by remember { mutableStateOf(repo.effortLabel) }
     var reminder by remember { mutableStateOf(repo.reminderOn) }
     var whyMonday by remember { mutableStateOf(false) }
     var erasing by remember { mutableStateOf(false) }
@@ -124,21 +123,6 @@ fun SettingsScreen(back: () -> Unit) {
                 Modifier.padding(start = Ink.s2, bottom = Ink.s3),
                 color = Ink.inkFaint,
                 size = 8.sp,
-            )
-        }
-
-        // The thorn's practice, renameable.
-        SettingRow("THORN MARKS") {
-            BasicTextField(
-                value = effortLabel,
-                onValueChange = {
-                    effortLabel = it.uppercase(Locale.ROOT).take(12)
-                    repo.effortLabel = effortLabel
-                },
-                textStyle = Ink.data(12.sp, Ink.ink),
-                singleLine = true,
-                cursorBrush = androidx.compose.ui.graphics.SolidColor(Ink.ink),
-                modifier = Modifier.width(120.dp),
             )
         }
 

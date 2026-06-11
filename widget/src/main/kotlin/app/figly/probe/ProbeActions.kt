@@ -31,10 +31,18 @@ class SetMoodAction : ActionCallback {
     }
 }
 
-class SetEffortAction : ActionCallback {
+class SetBodyAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
         val v = parameters[PARAM_VALUE] ?: return
-        FigRepository.get(context).updateDraft(LocalDate.now()) { copy(effort = v) }
+        FigRepository.get(context).updateDraft(LocalDate.now()) { copy(body = v) }
+        repaint(context)
+    }
+}
+
+class SetMindAction : ActionCallback {
+    override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
+        val v = parameters[PARAM_VALUE] ?: return
+        FigRepository.get(context).updateDraft(LocalDate.now()) { copy(mind = v) }
         repaint(context)
     }
 }
@@ -77,7 +85,8 @@ class SealDayAction : ActionCallback {
         val mood = d.mood ?: return
         val bed = d.bedMin ?: return
         val dur = d.durMin ?: return
-        val effort = d.effort ?: return
+        val body = d.body ?: return
+        val mind = d.mind ?: return
         val budget = d.underBudget
             ?: UsageReadings.underBudget(context, repo.screenBudgetMin, now)
             ?: return
@@ -88,7 +97,8 @@ class SealDayAction : ActionCallback {
                 mood = mood,
                 bedMinutesAfterNoon = bed,
                 durationMin = dur,
-                effort = effort,
+                body = body,
+                mind = mind,
                 underBudget = budget,
             ),
             now,

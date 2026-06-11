@@ -221,18 +221,17 @@ private fun annotate(cell: FigCell, days: List<DayReadingEntity>): String {
     val bedAbs = (12 * 60 + row.bedMinutesAfterNoon) % (24 * 60)
     val bed = "%02d:%02d".format(Locale.ROOT, bedAbs / 60, bedAbs % 60)
     val dur = "${row.durationMin / 60}H%02d".format(Locale.ROOT, row.durationMin % 60)
-    val marks = buildList {
-        if (cell.type == CellType.DRUPE || row.underBudget) add("DRUPE")
-        if (row.effort >= 4) add("THORN")
-    }.joinToString(" · ")
+    val mind = if (row.mentalEffort == 0) "—" else "${row.mentalEffort}"
+    val drupe = if (cell.type == CellType.DRUPE || row.underBudget) " · DRUPE" else ""
 
     return listOf(
         name,
         "SLEPT $bed",
         dur,
         "MOOD ${row.mood}",
-        "EFFORT ${row.effort}",
-    ).joinToString(" · ") + if (marks.isEmpty()) "" else " · $marks"
+        "BODY ${row.effort}",
+        "MIND $mind",
+    ).joinToString(" · ") + drupe
 }
 
 /** Hairline corner ticks inset like the reference plate's. */

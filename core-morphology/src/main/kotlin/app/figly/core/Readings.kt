@@ -1,7 +1,7 @@
 package app.figly.core
 
 /**
- * One day's five readings. All scales run 1–5.
+ * One day's six readings. All scales run 1–5.
  *
  * Each reading shapes exactly one morphological channel — this 1:1 mapping
  * is the product's legibility, never blend channels:
@@ -9,7 +9,8 @@ package app.figly.core
  *   mood 1–5        → internode length (vigor)
  *   sleep duration  → leaves (rest)
  *   sleep start     → tropism (bend) — early nights climb, late nights droop
- *   effort 1–5      → thorn (strength), grown at 4 and above
+ *   body 1–5        → thorn pointing down-outward (earth), grown at 4+
+ *   mind 1–5        → thorn pointing up-outward (sky), grown at 4+
  *   under budget    → drupe (discipline fruit)
  *   missed check-in → scar — honest gaps
  */
@@ -20,14 +21,17 @@ data class DayReading(
     val bedMinutesAfterNoon: Int,
     /** Sleep duration in minutes. */
     val durationMin: Int,
-    /** Physical effort, 1–5. A thorn grows at 4 and above. */
-    val effort: Int,
+    /** Physical effort, 1–5. A thorn grows downward at 4 and above. */
+    val body: Int,
+    /** Mental effort, 1–5. A thorn grows skyward at 4 and above. */
+    val mind: Int,
     /** Screen time stayed under budget. */
     val underBudget: Boolean,
 ) {
     init {
         require(mood in 1..5) { "mood is a 1–5 scale" }
-        require(effort in 1..5) { "effort is a 1–5 scale" }
+        require(body in 1..5) { "body is a 1–5 scale" }
+        require(mind in 1..5) { "mind is a 1–5 scale" }
     }
 }
 
@@ -43,7 +47,7 @@ sealed interface DaySlot {
  */
 fun internodeLength(mood: Int): Int = maxOf(1, mood - 1)
 
-/** Thorns mark days of real exertion. */
+/** Thorns mark days of real exertion — of either kind. */
 fun growsThorn(effort: Int): Boolean = effort >= 4
 
 /** Leaf habit from sleep duration. */
