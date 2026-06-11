@@ -99,6 +99,7 @@ private data class Fit(
     val header: Boolean,
     val scaleRowH: Int,   // the dot banks — the heroes
     val senseRowH: Int,   // sleep, screen, grace
+    val headerH: Int,
     val labelSp: Int,
     val valueSp: Int,
     val daySp: Int,
@@ -107,24 +108,45 @@ private data class Fit(
     val pad: Int,
 )
 
+/**
+ * Fluid fit: the rows divide the height the launcher actually gave us,
+ * so the bottom line is never clipped — on any grid, any cell size.
+ * Type steps in three sizes; space flows continuously.
+ */
 @Composable
-private fun fit(): Fit {
-    val h = LocalSize.current.height
-    return when {
-        h < 150.dp -> Fit(
-            header = false, scaleRowH = 26, senseRowH = 20,
-            labelSp = 10, valueSp = 12, daySp = 13, dotSp = 16, sealH = 20, pad = 8,
-        )
-        h < 210.dp -> Fit(
-            header = true, scaleRowH = 36, senseRowH = 24,
-            labelSp = 12, valueSp = 14, daySp = 16, dotSp = 20, sealH = 26, pad = 12,
-        )
-        else -> Fit(
-            header = true, scaleRowH = 42, senseRowH = 28,
-            labelSp = 13, valueSp = 15, daySp = 18, dotSp = 23, sealH = 30, pad = 14,
-        )
+private fun fit(hasGrace: Boolean): Fit {
+    val h = LocalSize.current.height.value
+    val (labelSp, valueSp, daySp, dotSp, pad, header) = when {
+        h < 150f -> listOf(10, 12, 13, 16, 8, 0)
+        h < 210f -> listOf(12, 14, 16, 20, 12, 1)
+        else -> listOf(13, 15, 18, 23, 14, 1)
     }
+    val showHeader = header == 1
+    val sealH = if (h < 150f) 20f else 26f
+
+    // Units of height: scales 1.0 each, senses 0.7, header 0.8, grace 0.7.
+    var units = 2f * 1.0f + 2f * 0.7f
+    if (showHeader) units += 0.8f
+    if (hasGrace) units += 0.7f
+    val rules = 2 + (if (showHeader) 1 else 0) + (if (hasGrace) 1 else 0)
+    val available = (h - 2 * pad - sealH - rules).coerceAtLeast(60f)
+    val unit = available / units
+
+    return Fit(
+        header = showHeader,
+        scaleRowH = unit.coerceIn(24f, 56f).toInt(),
+        senseRowH = (unit * 0.7f).coerceIn(18f, 38f).toInt(),
+        headerH = (unit * 0.8f).coerceIn(20f, 44f).toInt(),
+        labelSp = labelSp,
+        valueSp = valueSp,
+        daySp = daySp,
+        dotSp = dotSp,
+        sealH = sealH.toInt(),
+        pad = pad,
+    )
 }
+
+private operator fun <T> List<T>.component6(): T = this[5]
 
 /** The launcher's own widget rounding, so the plate sits native. */
 @Composable
@@ -147,7 +169,10 @@ private fun ProbeContent(
     sealed: Bitmap?,
     silhouette: Bitmap?,
 ) {
-    val f = fit()
+    val f = fit(
+        hasGrace = s.grace != null &&
+            s.kind != ProbeState.Kind.SEALED && s.kind != ProbeState.Kind.PRESSING,
+    )
     val r = systemCornerRadius()
     // Hairline ring: a 1 dp reveal of hairline under the plate, both
     // rounded to the OS radius.
@@ -212,7 +237,7 @@ private fun AskingFace(s: ProbeState, f: Fit) {
     Column(GlanceModifier.fillMaxSize()) {
         if (f.header) {
             Row(
-                GlanceModifier.fillMaxWidth().height((f.senseRowH + 6).dp),
+                GlanceModifier.fillMaxWidth().height(f.headerH.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(Probe.tracked(s.dayName), style = mono(INK, f.daySp))

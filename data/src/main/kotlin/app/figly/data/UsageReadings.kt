@@ -55,9 +55,10 @@ object UsageReadings {
             when (parts[0]) {
                 "got" -> return SleepSuggestion(parts[1].toInt(), parts[2].toInt())
                 "none" -> {
+                    // Retry an empty morning every half hour, all day — the
+                    // permission may arrive after the first ask.
                     val lastTry = parts.getOrNull(1)?.toLongOrNull() ?: 0L
-                    val morning = ZonedDateTime.now(zone).hour < 12
-                    if (!morning || System.currentTimeMillis() - lastTry < 30 * 60_000L) return null
+                    if (System.currentTimeMillis() - lastTry < 30 * 60_000L) return null
                 }
             }
         }
