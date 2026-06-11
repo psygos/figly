@@ -142,7 +142,9 @@ sideloading; this is a personal instrument, not a storefront.
 
 ## on device
 
-1. `adb install -r app/build/outputs/apk/release/app-release.apk`
+1. Take the APK from [Releases](https://github.com/psygos/figly/releases)
+   and sideload it — or `./deploy.sh`, which grows the APK and plants it
+   over USB, or over Wi-Fi once the phone has answered before.
 2. First launch shows The Key — how to read a fig — offers to place
    Probe, and deep-links the Glyph Toys manager.
 3. Settings → Glyph Interface → Flip to Glyph → Always-on Glyph Toy →
