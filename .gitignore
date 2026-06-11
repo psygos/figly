@@ -1,6 +1,7 @@
 .gradle/
 build/
 local.properties
+.deploy-phone
 .DS_Store
 .kotlin/
 *.iml
