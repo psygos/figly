@@ -196,6 +196,19 @@ class FigRepository private constructor(private val context: Context) {
         }
     }
 
+    /**
+     * Daily housekeeping for hot paths: lapsed graces and due presses run
+     * once per day here — a widget tap can't afford the full sweep. Seals,
+     * app opens and Loom binds still run the real thing.
+     */
+    suspend fun housekeepDaily(now: ZonedDateTime = ZonedDateTime.now()) {
+        val today = now.toLocalDate().toString()
+        if (prefs.getString(KEY_HOUSEKEPT, null) == today) return
+        resolveLapsedGraces(now)
+        pressIfDue(now)
+        prefs.edit { putString(KEY_HOUSEKEPT, today) }
+    }
+
     /** Yesterday, if it is still unresolved and inside its grace window. */
     suspend fun graceDate(now: ZonedDateTime = ZonedDateTime.now()): LocalDate? {
         val yesterday = now.toLocalDate().minusDays(1)
@@ -358,6 +371,7 @@ class FigRepository private constructor(private val context: Context) {
         private const val KEY_REMINDER = "reminderOn"
         private const val KEY_KEY_SEEN = "keySeen"
         private const val KEY_WITNESSED = "witnessed:"
+        private const val KEY_HOUSEKEPT = "housekeptDate"
 
         @Volatile private var instance: FigRepository? = null
 

@@ -29,6 +29,9 @@ data class ProbeState(
     val underBudget: Boolean?,    // resolved (draft override or auto)
     val budgetIsAuto: Boolean,
     val budgetNeedsHand: Boolean, // no permission, no override
+    /** Foreground minutes so far today, when the instrument can sense them. */
+    val screenMin: Int?,
+    val dayIndex: Int,            // Monday = 1 .. Sunday = 7
     val sealable: Boolean,
     val figId: String,            // for PRESSING
     val sealedStamp: List<Stamp.Dot>,
@@ -45,8 +48,7 @@ object Probe {
 
     suspend fun state(context: Context, now: ZonedDateTime = ZonedDateTime.now()): ProbeState {
         val repo = FigRepository.get(context)
-        repo.resolveLapsedGraces(now)
-        repo.pressIfDue(now)
+        repo.housekeepDaily(now)
 
         val today = now.toLocalDate()
         val weekKey = WeekKeys.isoWeekKey(today)
@@ -69,9 +71,10 @@ object Probe {
             }
         }
 
-        // Screen: auto-resolve at 23:00 or on seal, whichever comes first;
-        // a tap can always override.
-        val auto = UsageReadings.underBudget(context, repo.screenBudgetMin, now)
+        // Screen: inferred and populated — the instrument reads its own
+        // minutes; a tap can always overrule the verdict.
+        val screenMin = UsageReadings.screenTimeTodayMin(context, now)
+        val auto = screenMin?.let { it <= repo.screenBudgetMin }
         val resolved = draft.underBudget ?: auto
         val budgetIsAuto = draft.underBudget == null && auto != null
         if (draft.underBudget == null && auto != null && now.hour >= 23) {
@@ -105,6 +108,8 @@ object Probe {
             underBudget = resolved,
             budgetIsAuto = budgetIsAuto,
             budgetNeedsHand = resolved == null,
+            screenMin = screenMin,
+            dayIndex = WeekKeys.dayIndex(today),
             sealable = sealable,
             figId = WeekKeys.figId(weekKey),
             sealedStamp = if (sealedToday) {

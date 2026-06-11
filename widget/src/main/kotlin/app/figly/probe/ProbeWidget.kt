@@ -82,13 +82,16 @@ private val INK = ColorProvider(Color(0xFFE7E2D5))
 private val INK_DIM = ColorProvider(Color(0xFF6B675C))
 private val INK_FAINT = ColorProvider(Color(0xFF3A3933))
 
+/** Over budget is a climate, not an alarm: ashfall rust, not red. */
+private val ASHFALL = ColorProvider(Color(0xFFA3653F))
+
 private fun mono(c: ColorProvider, size: Int) = TextStyle(
     color = c,
     fontSize = size.sp,
     fontFamily = FontFamily.Monospace,
 )
 
-/** Everything that scales with the widget's real size. */
+/** Everything that scales with the widget's real size. 4×3 is home. */
 private data class Fit(
     val rowH: Int,      // question row height, dp
     val labelSp: Int,
@@ -96,15 +99,16 @@ private data class Fit(
     val dotSp: Int,
     val sealH: Int,
     val pad: Int,
+    val header: Boolean,
 )
 
 @Composable
 private fun fit(): Fit {
     val h = LocalSize.current.height
-    return if (h < 150.dp) {
-        Fit(rowH = 24, labelSp = 10, valueSp = 11, dotSp = 14, sealH = 18, pad = 8)
-    } else {
-        Fit(rowH = 31, labelSp = 11, valueSp = 13, dotSp = 17, sealH = 24, pad = 12)
+    return when {
+        h < 150.dp -> Fit(rowH = 25, labelSp = 10, valueSp = 12, dotSp = 15, sealH = 20, pad = 8, header = false)
+        h < 210.dp -> Fit(rowH = 33, labelSp = 12, valueSp = 14, dotSp = 18, sealH = 26, pad = 12, header = false)
+        else -> Fit(rowH = 40, labelSp = 13, valueSp = 15, dotSp = 21, sealH = 30, pad = 14, header = true)
     }
 }
 
@@ -166,6 +170,18 @@ private fun PressingFace(s: ProbeState, silhouette: Bitmap?, f: Fit) {
 @Composable
 private fun AskingFace(s: ProbeState, f: Fit) {
     Column(GlanceModifier.fillMaxSize()) {
+        if (f.header) {
+            Row(
+                GlanceModifier.fillMaxWidth().height((f.rowH * 0.75f).dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(Probe.tracked(s.dayName), style = mono(INK, f.valueSp))
+                Spacer(GlanceModifier.defaultWeight())
+                Text(Probe.tracked("DAY ${s.dayIndex} OF 7"), style = mono(INK_FAINT, f.labelSp))
+            }
+            Rule()
+            Spacer(GlanceModifier.height(2.dp))
+        }
         if (s.grace != null) {
             GraceRow(s, f)
         }
@@ -336,6 +352,10 @@ private fun SleepRow(s: ProbeState, f: Fit) {
     }
 }
 
+/**
+ * Screen is data, not a question: the instrument reads its own minutes
+ * and pre-answers. Over budget wears ashfall rust. A tap overrules.
+ */
 @Composable
 private fun ScreenRow(s: ProbeState, f: Fit) {
     Row(
@@ -349,14 +369,17 @@ private fun ScreenRow(s: ProbeState, f: Fit) {
             modifier = GlanceModifier.width(92.dp),
         )
         Spacer(GlanceModifier.defaultWeight())
-        val text = when (s.underBudget) {
-            true -> "UNDER ✓" + if (s.budgetIsAuto) " · AUTO" else ""
-            false -> "OVER ·" + if (s.budgetIsAuto) " · AUTO" else ""
-            null -> "[ TAP TO SET ]"
+        val minutes = s.screenMin?.let { m ->
+            if (m >= 60) "${m / 60}H%02d".format(java.util.Locale.ROOT, m % 60) else "${m}M"
+        }
+        val (text, color) = when (s.underBudget) {
+            true -> listOfNotNull(minutes, "UNDER").joinToString(" · ") to INK
+            false -> listOfNotNull(minutes, "OVER").joinToString(" · ") to ASHFALL
+            null -> "[ TAP TO SET ]" to INK_DIM
         }
         Text(
             Probe.tracked(text),
-            style = mono(if (s.underBudget != null) INK else INK_DIM, f.valueSp),
+            style = mono(color, f.valueSp),
             modifier = GlanceModifier
                 .clickable(actionRunCallback<ToggleScreenAction>())
                 .padding(horizontal = 8.dp),

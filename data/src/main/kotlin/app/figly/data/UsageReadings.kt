@@ -18,6 +18,13 @@ import java.time.ZonedDateTime
  */
 object UsageReadings {
 
+    // Walking a whole day of usage events costs real time; a widget tap
+    // cannot afford it twice. The senses remember briefly.
+    private const val SCREEN_TTL_MS = 90_000L
+    private var screenCacheDate: String? = null
+    private var screenCacheMin: Int = -1
+    private var screenCacheAt: Long = 0L
+
     fun hasPermission(context: Context): Boolean {
         val ops = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
         val mode = ops.unsafeCheckOpNoThrow(
@@ -37,8 +44,33 @@ object UsageReadings {
     /**
      * The night's longest screen-off gap, between 21:00 yesterday and
      * 12:00 today. A suggestion only — Probe always confirms, never assumes.
+     * Computed once per date, remembered in prefs; an empty morning is
+     * retried every half hour until noon.
      */
     fun suggestSleep(context: Context, date: LocalDate, zone: ZoneId = ZoneId.systemDefault()): SleepSuggestion? {
+        val prefs = context.getSharedPreferences("figly", Context.MODE_PRIVATE)
+        val key = "sense:sleep:$date"
+        prefs.getString(key, null)?.let { cached ->
+            val parts = cached.split(":")
+            when (parts[0]) {
+                "got" -> return SleepSuggestion(parts[1].toInt(), parts[2].toInt())
+                "none" -> {
+                    val lastTry = parts.getOrNull(1)?.toLongOrNull() ?: 0L
+                    val morning = ZonedDateTime.now(zone).hour < 12
+                    if (!morning || System.currentTimeMillis() - lastTry < 30 * 60_000L) return null
+                }
+            }
+        }
+        val fresh = computeSleep(context, date, zone)
+        prefs.edit().putString(
+            key,
+            if (fresh != null) "got:${fresh.bedMinutesAfterNoon}:${fresh.durationMin}"
+            else "none:${System.currentTimeMillis()}",
+        ).apply()
+        return fresh
+    }
+
+    private fun computeSleep(context: Context, date: LocalDate, zone: ZoneId): SleepSuggestion? {
         if (!hasPermission(context)) return null
         val usm = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
         val from = ZonedDateTime.of(LocalDateTime.of(date.minusDays(1), LocalTime.of(21, 0)), zone)
@@ -85,9 +117,14 @@ object UsageReadings {
         )
     }
 
-    /** Foreground screen time since local midnight, in minutes. */
+    /** Foreground screen time since local midnight, in minutes. Cached briefly. */
     fun screenTimeTodayMin(context: Context, now: ZonedDateTime = ZonedDateTime.now()): Int? {
         if (!hasPermission(context)) return null
+        val today = now.toLocalDate().toString()
+        val mono = android.os.SystemClock.elapsedRealtime()
+        if (screenCacheDate == today && screenCacheMin >= 0 &&
+            mono - screenCacheAt < SCREEN_TTL_MS
+        ) return screenCacheMin
         val usm = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
         val midnight = now.toLocalDate().atStartOfDay(now.zone)
         val events = usm.queryEvents(midnight.toInstant().toEpochMilli(), now.toInstant().toEpochMilli())
@@ -107,7 +144,11 @@ object UsageReadings {
         }
         // Anything still resumed counts up to now.
         for (start in resumedAt.values) total += (now.toInstant().toEpochMilli() - start).coerceAtLeast(0)
-        return (total / 60_000L).toInt()
+        val minutes = (total / 60_000L).toInt()
+        screenCacheDate = today
+        screenCacheMin = minutes
+        screenCacheAt = mono
+        return minutes
     }
 
     /** Under budget? Null when unknowable (no permission). */
