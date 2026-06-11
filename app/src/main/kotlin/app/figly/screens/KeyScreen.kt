@@ -20,6 +20,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -85,11 +89,20 @@ fun KeyScreen(firstRun: Boolean, done: () -> Unit) {
                 Ink.data(12.sp, Ink.inkDim),
             )
             Spacer(Modifier.height(Ink.s3))
+            var toysLinkFailed by remember { mutableStateOf(false) }
             Micro(
                 "OPEN GLYPH TOYS",
-                Modifier.clickable { openGlyphToys(context) }.padding(Ink.s2),
+                Modifier.clickable { toysLinkFailed = !openGlyphToys(context) }.padding(Ink.s2),
                 color = Ink.ink,
             )
+            if (toysLinkFailed) {
+                Micro(
+                    GLYPH_TOYS_PATH_BY_HAND,
+                    Modifier.padding(start = Ink.s2, top = Ink.s1),
+                    color = Ink.inkFaint,
+                    size = 8.sp,
+                )
+            }
             Spacer(Modifier.height(Ink.s4))
             Label(
                 "probe lives on your home screen.\nit asks five questions a day.",
@@ -215,18 +228,31 @@ private fun KeyDiagram() {
     }
 }
 
-/** Deep-link to the system's Glyph Toys manager; quiet fallback copy. */
-fun openGlyphToys(context: android.content.Context): Boolean = runCatching {
-    context.startActivity(
+/**
+ * Deep-link to the system's Glyph Toys manager. Nothing OS 3.1 answers the
+ * TOYS_MANAGER action (verified on device); older builds used an explicit
+ * component. Try both; report failure so callers can show the path by hand.
+ */
+fun openGlyphToys(context: android.content.Context): Boolean {
+    val candidates = listOf(
+        Intent("com.nothing.glyph.TOYS_MANAGER"),
         Intent().setComponent(
             ComponentName(
                 "com.nothing.thirdparty",
                 "com.nothing.thirdparty.matrix.toys.manager.ToysManagerActivity",
             ),
-        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+        ),
     )
-    true
-}.isSuccess
+    for (intent in candidates) {
+        val ok = runCatching {
+            context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }.isSuccess
+        if (ok) return true
+    }
+    return false
+}
+
+const val GLYPH_TOYS_PATH_BY_HAND = "SETTINGS → GLYPH INTERFACE → ALWAYS-ON GLYPH TOY"
 
 fun requestProbePin(context: android.content.Context): Boolean = runCatching {
     val awm = context.getSystemService(AppWidgetManager::class.java)

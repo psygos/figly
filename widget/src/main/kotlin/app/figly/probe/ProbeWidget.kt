@@ -132,8 +132,10 @@ private fun PressingFace(s: ProbeState, silhouette: Bitmap?) {
 @Composable
 private fun AskingFace(s: ProbeState, stamp: Bitmap) {
     val early = s.kind == ProbeState.Kind.EARLY
-    val label = if (early) INK_FAINT else INK_DIM
-    val value = if (early) INK_DIM else INK
+    // Early mornings read open, not dead: the strip stays legible; only
+    // the bottom line says the day is still young.
+    val label = INK_DIM
+    val value = INK
 
     Row(GlanceModifier.fillMaxSize()) {
         Column(
@@ -157,7 +159,7 @@ private fun AskingFace(s: ProbeState, stamp: Bitmap) {
                     actionRunCallback<SetMoodAction>(actionParametersOf(PARAM_VALUE to v))
                 }
             } else {
-                CollapsedRow("MOOD", "${s.mood}", label)
+                CollapsedRow("MOOD", "● ${s.mood}", "mood")
             }
             SleepRow(s, label, value)
             if (s.effort == null) {
@@ -165,11 +167,11 @@ private fun AskingFace(s: ProbeState, stamp: Bitmap) {
                     actionRunCallback<SetEffortAction>(actionParametersOf(PARAM_VALUE to v))
                 }
             } else {
-                CollapsedRow(s.effortLabel, "${s.effort}", label)
+                CollapsedRow(s.effortLabel, "● ${s.effort}", "effort")
             }
             ScreenRow(s, label, value)
             Spacer(GlanceModifier.defaultWeight())
-            SealRow(s, early)
+            SealRow(s)
         }
     }
 }
@@ -217,37 +219,44 @@ private fun DotsRow(
     value: ColorProvider,
     action: (Int) -> androidx.glance.action.Action,
 ) {
-    Row(GlanceModifier.fillMaxWidth().height(20.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(GlanceModifier.fillMaxWidth().height(24.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(Probe.tracked(name), style = micro(label, 9), maxLines = 1, modifier = GlanceModifier.width(76.dp))
         Spacer(GlanceModifier.defaultWeight())
         for (v in 1..5) {
             val filled = selected != null && v <= selected
             Box(
-                GlanceModifier.size(20.dp).clickable(action(v)),
+                GlanceModifier.size(22.dp).clickable(action(v)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(if (filled) "●" else "·", style = micro(if (filled) value else INK_DIM, 11))
+                Text(if (filled) "●" else "·", style = micro(if (filled) value else INK_DIM, 12))
             }
         }
     }
 }
 
+/** An answered row, collapsed to its mark. Tap the mark to amend. */
 @Composable
-private fun CollapsedRow(name: String, mark: String, label: ColorProvider) {
-    Row(GlanceModifier.fillMaxWidth().height(14.dp), verticalAlignment = Alignment.CenterVertically) {
+private fun CollapsedRow(name: String, mark: String, channel: String) {
+    Row(GlanceModifier.fillMaxWidth().height(16.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(Probe.tracked(name), style = micro(INK_FAINT, 9), maxLines = 1, modifier = GlanceModifier.width(76.dp))
         Spacer(GlanceModifier.defaultWeight())
-        Text(mark, style = micro(label, 9))
+        Text(
+            mark,
+            style = micro(INK_DIM, 9),
+            modifier = GlanceModifier
+                .clickable(actionRunCallback<AmendAction>(actionParametersOf(PARAM_CHANNEL to channel)))
+                .padding(horizontal = 6.dp),
+        )
     }
 }
 
 @Composable
 private fun SleepRow(s: ProbeState, label: ColorProvider, value: ColorProvider) {
     if (s.sleepConfirmed && s.bedMin != null && s.durMin != null) {
-        CollapsedRow("SLEPT", "${Probe.clockOf(s.bedMin)} → ${Probe.wakeOf(s.bedMin, s.durMin)}", label)
+        CollapsedRow("SLEPT", "${Probe.clockOf(s.bedMin)} → ${Probe.wakeOf(s.bedMin, s.durMin)}", "sleep")
         return
     }
-    Row(GlanceModifier.fillMaxWidth().height(20.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(GlanceModifier.fillMaxWidth().height(22.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(Probe.tracked("SLEPT"), style = micro(label, 9), maxLines = 1, modifier = GlanceModifier.width(76.dp))
         Spacer(GlanceModifier.defaultWeight())
         val sheet = actionStartActivity(
@@ -255,23 +264,31 @@ private fun SleepRow(s: ProbeState, label: ColorProvider, value: ColorProvider) 
                 .apply { putExtra("mode", "today") },
         )
         if (s.bedMin != null && s.durMin != null) {
+            // A suggested night: tap the times to adjust, OK to take them.
             Text(
                 "${Probe.clockOf(s.bedMin)} → ${Probe.wakeOf(s.bedMin, s.durMin)}",
                 style = micro(value, 10),
                 modifier = GlanceModifier.clickable(sheet),
             )
-            Spacer(GlanceModifier.width(8.dp))
-            Box(
-                GlanceModifier.size(22.dp).clickable(actionRunCallback<ConfirmSleepAction>()),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text("✓", style = micro(value, 11))
-            }
+            Spacer(GlanceModifier.width(6.dp))
+            Text(
+                Probe.tracked("[ OK ]"),
+                style = micro(value, 10),
+                modifier = GlanceModifier
+                    .clickable(actionRunCallback<ConfirmSleepAction>())
+                    .padding(horizontal = 2.dp),
+            )
         } else {
             Text(
                 "--:-- → --:--",
                 style = micro(INK_DIM, 10),
                 modifier = GlanceModifier.clickable(sheet),
+            )
+            Spacer(GlanceModifier.width(6.dp))
+            Text(
+                Probe.tracked("[ SET ]"),
+                style = micro(value, 10),
+                modifier = GlanceModifier.clickable(sheet).padding(horizontal = 2.dp),
             )
         }
     }
@@ -279,43 +296,47 @@ private fun SleepRow(s: ProbeState, label: ColorProvider, value: ColorProvider) 
 
 @Composable
 private fun ScreenRow(s: ProbeState, label: ColorProvider, value: ColorProvider) {
-    Row(GlanceModifier.fillMaxWidth().height(16.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(GlanceModifier.fillMaxWidth().height(18.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(Probe.tracked("SCREEN"), style = micro(label, 9), maxLines = 1, modifier = GlanceModifier.width(76.dp))
         Spacer(GlanceModifier.defaultWeight())
         val text = when (s.underBudget) {
             true -> "UNDER ✓" + if (s.budgetIsAuto) " · AUTO" else ""
             false -> "OVER ·" + if (s.budgetIsAuto) " · AUTO" else ""
-            null -> "BY HAND —"
+            null -> "[ TAP TO SET ]"
         }
         Text(
             Probe.tracked(text),
             style = micro(if (s.underBudget != null) value else INK_DIM, 9),
-            modifier = GlanceModifier.clickable(actionRunCallback<ToggleScreenAction>()),
+            modifier = GlanceModifier
+                .clickable(actionRunCallback<ToggleScreenAction>())
+                .padding(horizontal = 2.dp),
         )
     }
 }
 
 @Composable
-private fun SealRow(s: ProbeState, early: Boolean) {
+private fun SealRow(s: ProbeState) {
     Rule()
     Spacer(GlanceModifier.height(3.dp))
-    if (early && !s.sealable) {
-        Text(
-            Probe.tracked("READINGS OPEN"),
-            style = micro(INK_FAINT, 9),
-            modifier = GlanceModifier.fillMaxWidth(),
-        )
-        return
-    }
-    Box(
-        GlanceModifier.fillMaxWidth().height(18.dp)
-            .clickable(actionRunCallback<SealDayAction>()),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            Probe.tracked("[ SEAL DAY ]"),
-            style = micro(if (s.sealable) INK else INK_FAINT, 10),
-        )
+    if (s.sealable) {
+        Box(
+            GlanceModifier.fillMaxWidth().height(18.dp)
+                .clickable(actionRunCallback<SealDayAction>()),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(Probe.tracked("[ SEAL DAY ]"), style = micro(INK, 10))
+        }
+    } else {
+        // The record knows how far it is. No urging, just the count.
+        Box(
+            GlanceModifier.fillMaxWidth().height(18.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                Probe.tracked("READINGS OPEN · ${s.answered} OF 5"),
+                style = micro(INK_FAINT, 9),
+            )
+        }
     }
 }
 

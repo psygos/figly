@@ -36,9 +36,10 @@ data class ProbeState(
 ) {
     enum class Kind { EARLY, ASKING, SEALED, PRESSING }
 
+    /** Of the five readings — bed time and duration confirm together as two. */
     val answered: Int
-        get() = listOf(mood != null, sleepConfirmed, effort != null, underBudget != null)
-            .count { it }
+        get() = listOf(mood != null, effort != null, underBudget != null).count { it } +
+            if (sleepConfirmed) 2 else 0
 }
 
 object Probe {

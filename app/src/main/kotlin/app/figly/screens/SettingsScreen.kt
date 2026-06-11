@@ -190,8 +190,17 @@ fun SettingsScreen(back: () -> Unit) {
         }
 
         // Loom.
-        SettingRow("LOOM", onTap = { openGlyphToys(context) }) {
+        var toysLinkFailed by remember { mutableStateOf(false) }
+        SettingRow("LOOM", onTap = { toysLinkFailed = !openGlyphToys(context) }) {
             Micro("OPEN GLYPH TOYS", color = Ink.inkDim)
+        }
+        if (toysLinkFailed) {
+            Micro(
+                GLYPH_TOYS_PATH_BY_HAND,
+                Modifier.padding(start = Ink.s2, bottom = Ink.s3),
+                color = Ink.inkFaint,
+                size = 8.sp,
+            )
         }
 
         Spacer(Modifier.height(Ink.s6))
