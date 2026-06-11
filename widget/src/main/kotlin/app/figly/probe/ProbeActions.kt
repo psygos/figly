@@ -18,7 +18,6 @@ import java.time.ZonedDateTime
 
 val PARAM_VALUE = ActionParameters.Key<Int>("value")
 val PARAM_DATE = ActionParameters.Key<String>("date")
-val PARAM_CHANNEL = ActionParameters.Key<String>("channel")
 
 private suspend fun repaint(context: Context) {
     ProbeWidget().updateAll(context)
@@ -94,26 +93,6 @@ class SealDayAction : ActionCallback {
             ),
             now,
         )
-        repaint(context)
-    }
-}
-
-/** An answered row is not a sealed row: tap its mark to amend it. */
-class AmendAction : ActionCallback {
-    override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
-        val channel = parameters[PARAM_CHANNEL] ?: return
-        val repo = FigRepository.get(context)
-        val today = LocalDate.now()
-        repo.updateDraft(today) {
-            when (channel) {
-                "mood" -> copy(mood = null)
-                "effort" -> copy(effort = null)
-                // Keep the night's values; just reopen the confirmation.
-                "sleep" -> copy(sleepConfirmed = false)
-                "screen" -> copy(underBudget = null)
-                else -> this
-            }
-        }
         repaint(context)
     }
 }

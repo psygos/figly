@@ -4,7 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
@@ -20,6 +22,7 @@ import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.action.actionStartActivity
+import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Alignment
@@ -41,13 +44,13 @@ import androidx.glance.unit.ColorProvider
 import app.figly.data.FigRepository
 
 /**
- * PROBE — the voice. An instrument that asks five questions, takes
- * ≤ 20 seconds and a handful of taps, seals, and shuts up.
+ * PROBE — the voice. An instrument that asks five questions and shuts up.
  *
- * The asking face is questions only, full width, sized to be read at
- * arm's length — the day's stamp appears once the day is sealed, and
- * the living fig is always one flip away. Type and targets scale with
- * the widget: 4×3 is home, 4×2 still works.
+ * Three groups, hairline rhythm: the day · the two hand-scales (always
+ * visible, filled to your answer — change it by tapping another dot) ·
+ * the two sensed lines (sleep suggested, screen inferred) · the verb.
+ * Corners follow the OS; type follows the widget's true size. 4×3 is
+ * home, 4×4 breathes, 4×2 still answers.
  */
 class ProbeWidget : GlanceAppWidget() {
 
@@ -57,11 +60,11 @@ class ProbeWidget : GlanceAppWidget() {
         val state = Probe.state(context)
         val sealedBmp =
             if (state.kind == ProbeState.Kind.SEALED && state.sealedStamp.isNotEmpty()) {
-                StampBitmaps.stamp(state.sealedStamp, 200)
+                StampBitmaps.stamp(state.sealedStamp, 220)
             } else null
         val silhouetteBmp =
             if (state.kind == ProbeState.Kind.PRESSING) {
-                StampBitmaps.silhouette(FigRepository.get(context).liveFig(), 220)
+                StampBitmaps.silhouette(FigRepository.get(context).liveFig(), 240)
             } else null
 
         provideContent {
@@ -91,24 +94,48 @@ private fun mono(c: ColorProvider, size: Int) = TextStyle(
     fontFamily = FontFamily.Monospace,
 )
 
-/** Everything that scales with the widget's real size. 4×3 is home. */
+/** Everything that scales with the widget's true size. */
 private data class Fit(
-    val rowH: Int,      // question row height, dp
+    val header: Boolean,
+    val scaleRowH: Int,   // the dot banks — the heroes
+    val senseRowH: Int,   // sleep, screen, grace
     val labelSp: Int,
     val valueSp: Int,
+    val daySp: Int,
     val dotSp: Int,
     val sealH: Int,
     val pad: Int,
-    val header: Boolean,
 )
 
 @Composable
 private fun fit(): Fit {
     val h = LocalSize.current.height
     return when {
-        h < 150.dp -> Fit(rowH = 25, labelSp = 10, valueSp = 12, dotSp = 15, sealH = 20, pad = 8, header = false)
-        h < 210.dp -> Fit(rowH = 33, labelSp = 12, valueSp = 14, dotSp = 18, sealH = 26, pad = 12, header = false)
-        else -> Fit(rowH = 40, labelSp = 13, valueSp = 15, dotSp = 21, sealH = 30, pad = 14, header = true)
+        h < 150.dp -> Fit(
+            header = false, scaleRowH = 26, senseRowH = 20,
+            labelSp = 10, valueSp = 12, daySp = 13, dotSp = 16, sealH = 20, pad = 8,
+        )
+        h < 210.dp -> Fit(
+            header = true, scaleRowH = 36, senseRowH = 24,
+            labelSp = 12, valueSp = 14, daySp = 16, dotSp = 20, sealH = 26, pad = 12,
+        )
+        else -> Fit(
+            header = true, scaleRowH = 42, senseRowH = 28,
+            labelSp = 13, valueSp = 15, daySp = 18, dotSp = 23, sealH = 30, pad = 14,
+        )
+    }
+}
+
+/** The launcher's own widget rounding, so the plate sits native. */
+@Composable
+private fun systemCornerRadius(): Dp {
+    val context = LocalContext.current
+    return remember {
+        runCatching {
+            val px = context.resources
+                .getDimension(android.R.dimen.system_app_widget_background_radius)
+            (px / context.resources.displayMetrics.density).dp
+        }.getOrDefault(16.dp).coerceAtMost(28.dp)
     }
 }
 
@@ -121,11 +148,17 @@ private fun ProbeContent(
     silhouette: Bitmap?,
 ) {
     val f = fit()
-    // Hairline border: a 1 dp reveal of hairline under the plate.
-    Box(GlanceModifier.fillMaxSize().background(HAIRLINE).padding(1.dp)) {
+    val r = systemCornerRadius()
+    // Hairline ring: a 1 dp reveal of hairline under the plate, both
+    // rounded to the OS radius.
+    Box(
+        GlanceModifier.fillMaxSize().background(HAIRLINE)
+            .cornerRadius(r).padding(1.dp),
+    ) {
         Box(
             GlanceModifier.fillMaxSize().background(PLATE)
-                .padding(horizontal = (f.pad + 2).dp, vertical = f.pad.dp),
+                .cornerRadius(r - 1.dp)
+                .padding(horizontal = (f.pad + 4).dp, vertical = f.pad.dp),
         ) {
             when (s.kind) {
                 ProbeState.Kind.SEALED -> SealedFace(s, sealed, f)
@@ -143,11 +176,15 @@ private fun SealedFace(s: ProbeState, stamp: Bitmap?, f: Fit) {
             Image(
                 provider = ImageProvider(stamp),
                 contentDescription = "today's mark",
-                modifier = GlanceModifier.size((f.rowH * 3).dp),
+                modifier = GlanceModifier.size((f.scaleRowH * 2.6f).dp),
             )
             Spacer(GlanceModifier.width(16.dp))
         }
-        Text(Probe.tracked("DAY SEALED · ${s.dayName}"), style = mono(INK_DIM, f.valueSp))
+        Column {
+            Text(Probe.tracked(s.dayName), style = mono(INK, f.daySp))
+            Spacer(GlanceModifier.height(4.dp))
+            Text(Probe.tracked("DAY SEALED"), style = mono(INK_DIM, f.labelSp))
+        }
     }
 }
 
@@ -158,49 +195,48 @@ private fun PressingFace(s: ProbeState, silhouette: Bitmap?, f: Fit) {
             Image(
                 provider = ImageProvider(silhouette),
                 contentDescription = "the week's fig, pressed",
-                modifier = GlanceModifier.size((f.rowH * 3.4f).dp),
+                modifier = GlanceModifier.size((f.scaleRowH * 3f).dp),
             )
             Spacer(GlanceModifier.width(14.dp))
         }
-        Text(Probe.tracked("${s.figId} PRESSED"), style = mono(INK, f.valueSp))
+        Column {
+            Text(Probe.tracked(s.figId), style = mono(INK, f.valueSp))
+            Spacer(GlanceModifier.height(4.dp))
+            Text(Probe.tracked("PRESSED"), style = mono(INK_DIM, f.labelSp))
+        }
     }
 }
 
-/** Questions only, full width. The fig lives on the matrix, not here. */
 @Composable
 private fun AskingFace(s: ProbeState, f: Fit) {
     Column(GlanceModifier.fillMaxSize()) {
         if (f.header) {
             Row(
-                GlanceModifier.fillMaxWidth().height((f.rowH * 0.75f).dp),
+                GlanceModifier.fillMaxWidth().height((f.senseRowH + 6).dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(Probe.tracked(s.dayName), style = mono(INK, f.valueSp))
+                Text(Probe.tracked(s.dayName), style = mono(INK, f.daySp))
                 Spacer(GlanceModifier.defaultWeight())
                 Text(Probe.tracked("DAY ${s.dayIndex} OF 7"), style = mono(INK_FAINT, f.labelSp))
             }
             Rule()
-            Spacer(GlanceModifier.height(2.dp))
         }
-        if (s.grace != null) {
-            GraceRow(s, f)
+        if (s.grace != null) GraceRow(s, f)
+
+        // The two hand-scales: always visible, filled to the answer.
+        ScaleRow("MOOD", s.mood, f) { v ->
+            actionRunCallback<SetMoodAction>(actionParametersOf(PARAM_VALUE to v))
         }
-        if (s.mood == null) {
-            DotsRow("MOOD", null, f) { v ->
-                actionRunCallback<SetMoodAction>(actionParametersOf(PARAM_VALUE to v))
-            }
-        } else {
-            CollapsedRow("MOOD", "● ${s.mood}", "mood", f)
+        ScaleRow(s.effortLabel, s.effort, f) { v ->
+            actionRunCallback<SetEffortAction>(actionParametersOf(PARAM_VALUE to v))
         }
+
+        Rule()
+
+        // The two sensed lines.
         SleepRow(s, f)
-        if (s.effort == null) {
-            DotsRow(s.effortLabel, null, f) { v ->
-                actionRunCallback<SetEffortAction>(actionParametersOf(PARAM_VALUE to v))
-            }
-        } else {
-            CollapsedRow(s.effortLabel, "● ${s.effort}", "effort", f)
-        }
         ScreenRow(s, f)
+
         Spacer(GlanceModifier.defaultWeight())
         SealRow(s, f)
     }
@@ -215,7 +251,7 @@ private fun Rule() {
 private fun GraceRow(s: ProbeState, f: Fit) {
     val pkg = LocalContext.current.packageName
     Row(
-        GlanceModifier.fillMaxWidth().height((f.rowH * 0.8f).dp),
+        GlanceModifier.fillMaxWidth().height(f.senseRowH.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(Probe.tracked("YESTERDAY?"), style = mono(INK_DIM, f.labelSp))
@@ -245,23 +281,26 @@ private fun GraceRow(s: ProbeState, f: Fit) {
     Rule()
 }
 
-/** Five fat cells across the full remaining width. ○ waits, ● answers. */
+/**
+ * A 1–5 scale as five fat cells across the full width. ○ waits, ● holds
+ * the answer; tap any cell, any time before the seal, to change it.
+ */
 @Composable
-private fun DotsRow(
+private fun ScaleRow(
     name: String,
     selected: Int?,
     f: Fit,
     action: (Int) -> androidx.glance.action.Action,
 ) {
     Row(
-        GlanceModifier.fillMaxWidth().height(f.rowH.dp),
+        GlanceModifier.fillMaxWidth().height(f.scaleRowH.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             Probe.tracked(name),
-            style = mono(INK_DIM, f.labelSp),
+            style = mono(if (selected == null) INK_DIM else INK_FAINT, f.labelSp),
             maxLines = 1,
-            modifier = GlanceModifier.width(92.dp),
+            modifier = GlanceModifier.width(96.dp),
         )
         for (v in 1..5) {
             val filled = selected != null && v <= selected
@@ -278,76 +317,54 @@ private fun DotsRow(
     }
 }
 
-/** An answered row, collapsed to its mark. Tap the mark to amend. */
-@Composable
-private fun CollapsedRow(name: String, mark: String, channel: String, f: Fit) {
-    Row(
-        GlanceModifier.fillMaxWidth().height((f.rowH * 0.8f).dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            Probe.tracked(name),
-            style = mono(INK_FAINT, f.labelSp),
-            maxLines = 1,
-            modifier = GlanceModifier.width(92.dp),
-        )
-        Spacer(GlanceModifier.defaultWeight())
-        Text(
-            mark,
-            style = mono(INK_DIM, f.valueSp),
-            modifier = GlanceModifier
-                .clickable(actionRunCallback<AmendAction>(actionParametersOf(PARAM_CHANNEL to channel)))
-                .padding(horizontal = 8.dp),
-        )
-    }
-}
-
 @Composable
 private fun SleepRow(s: ProbeState, f: Fit) {
-    if (s.sleepConfirmed && s.bedMin != null && s.durMin != null) {
-        CollapsedRow(
-            "SLEPT",
-            "${Probe.clockOf(s.bedMin)} → ${Probe.wakeOf(s.bedMin, s.durMin)}",
-            "sleep",
-            f,
-        )
-        return
-    }
     Row(
-        GlanceModifier.fillMaxWidth().height(f.rowH.dp),
+        GlanceModifier.fillMaxWidth().height(f.senseRowH.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             Probe.tracked("SLEPT"),
-            style = mono(INK_DIM, f.labelSp),
+            style = mono(if (s.sleepConfirmed) INK_FAINT else INK_DIM, f.labelSp),
             maxLines = 1,
-            modifier = GlanceModifier.width(92.dp),
+            modifier = GlanceModifier.width(96.dp),
         )
         Spacer(GlanceModifier.defaultWeight())
         val sheet = actionStartActivity(
             Intent(SLEEP_SHEET_ACTION).setPackage(LocalContext.current.packageName)
                 .apply { putExtra("mode", "today") },
         )
-        if (s.bedMin != null && s.durMin != null) {
-            // A suggested night: tap the times to adjust, OK takes them.
-            Text(
-                "${Probe.clockOf(s.bedMin)} → ${Probe.wakeOf(s.bedMin, s.durMin)}",
-                style = mono(INK, f.valueSp),
-                modifier = GlanceModifier.clickable(sheet),
-            )
-            Text(
-                Probe.tracked("[ OK ]"),
-                style = mono(INK, f.valueSp),
-                modifier = GlanceModifier
-                    .clickable(actionRunCallback<ConfirmSleepAction>())
-                    .padding(horizontal = 6.dp),
-            )
-        } else {
-            Text(
-                Probe.tracked("[ SET ]"),
-                style = mono(INK, f.valueSp),
-                modifier = GlanceModifier.clickable(sheet).padding(horizontal = 8.dp),
-            )
+        when {
+            s.sleepConfirmed && s.bedMin != null && s.durMin != null -> {
+                // Confirmed; tap the times to adjust.
+                Text(
+                    "${Probe.clockOf(s.bedMin)} → ${Probe.wakeOf(s.bedMin, s.durMin)} ✓",
+                    style = mono(INK_DIM, f.valueSp),
+                    modifier = GlanceModifier.clickable(sheet).padding(horizontal = 6.dp),
+                )
+            }
+            s.bedMin != null && s.durMin != null -> {
+                // The night the instrument heard: OK takes it.
+                Text(
+                    "${Probe.clockOf(s.bedMin)} → ${Probe.wakeOf(s.bedMin, s.durMin)}",
+                    style = mono(INK, f.valueSp),
+                    modifier = GlanceModifier.clickable(sheet),
+                )
+                Text(
+                    Probe.tracked("[ OK ]"),
+                    style = mono(INK, f.valueSp),
+                    modifier = GlanceModifier
+                        .clickable(actionRunCallback<ConfirmSleepAction>())
+                        .padding(horizontal = 6.dp),
+                )
+            }
+            else -> {
+                Text(
+                    Probe.tracked("[ SET ]"),
+                    style = mono(INK, f.valueSp),
+                    modifier = GlanceModifier.clickable(sheet).padding(horizontal = 8.dp),
+                )
+            }
         }
     }
 }
@@ -359,21 +376,21 @@ private fun SleepRow(s: ProbeState, f: Fit) {
 @Composable
 private fun ScreenRow(s: ProbeState, f: Fit) {
     Row(
-        GlanceModifier.fillMaxWidth().height((f.rowH * 0.8f).dp),
+        GlanceModifier.fillMaxWidth().height(f.senseRowH.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             Probe.tracked("SCREEN"),
-            style = mono(INK_DIM, f.labelSp),
+            style = mono(if (s.underBudget != null) INK_FAINT else INK_DIM, f.labelSp),
             maxLines = 1,
-            modifier = GlanceModifier.width(92.dp),
+            modifier = GlanceModifier.width(96.dp),
         )
         Spacer(GlanceModifier.defaultWeight())
         val minutes = s.screenMin?.let { m ->
             if (m >= 60) "${m / 60}H%02d".format(java.util.Locale.ROOT, m % 60) else "${m}M"
         }
         val (text, color) = when (s.underBudget) {
-            true -> listOfNotNull(minutes, "UNDER").joinToString(" · ") to INK
+            true -> listOfNotNull(minutes, "UNDER").joinToString(" · ") to INK_DIM
             false -> listOfNotNull(minutes, "OVER").joinToString(" · ") to ASHFALL
             null -> "[ TAP TO SET ]" to INK_DIM
         }
