@@ -28,4 +28,5 @@ dependencies {
     // The Glyph Matrix SDK is packaged once, by :app. Compile-only here so the
     // library AAR doesn't try to embed a local AAR (unsupported by AGP).
     compileOnly(rootProject.files("libs/glyph-matrix-sdk-2.0.aar"))
+    testImplementation(libs.junit)
 }

@@ -25,5 +25,26 @@
                 android:name="com.nothing.glyph.toy.aod_support"
                 android:value="1" />
         </service>
+
+        <!-- HEARTWOOD — a clock rendered as a tree. AOD only. -->
+        <service
+            android:name="app.figly.glyph.HeartwoodToyService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.nothing.glyph.TOY" />
+            </intent-filter>
+            <meta-data
+                android:name="com.nothing.glyph.toy.name"
+                android:resource="@string/heartwood_toy_name" />
+            <meta-data
+                android:name="com.nothing.glyph.toy.image"
+                android:resource="@drawable/img_heartwood_preview" />
+            <meta-data
+                android:name="com.nothing.glyph.toy.summary"
+                android:resource="@string/heartwood_toy_summary" />
+            <meta-data
+                android:name="com.nothing.glyph.toy.aod_support"
+                android:value="1" />
+        </service>
     </application>
 </manifest>
